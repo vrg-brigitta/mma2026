@@ -46,7 +46,7 @@ def table_row_is_selected(selected_rows, added_rows, scatterplot_fig):
                 count_in_section.max())
         )], key=lambda x: x[1], reverse=True)
         print(wordcloud_data)
-        graph_elements = graph.build_elements(selected_rows[:config.MAX_GRAPH_NODES])
+        graph_elements = graph.build_elements(selected_rows)
     else:
         group_by_count = (data_selected.groupby(['class_id', 'class_name'])['class_id']
                           .agg('count')
