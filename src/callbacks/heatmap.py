@@ -1,6 +1,10 @@
 from dash import callback, Output, Input, html, no_update
 
+from src.Dataset import Dataset
 from src.utils import encode_image
+
+def get_id_from_path(path):
+    return path.split('/')[-1].split('.')[0]
 
 @callback(
     Output("heatmap-tooltip", "show"),
@@ -19,7 +23,8 @@ def display_hover(hover_data):
     y = pt["y"]
     z = pt["z"]
 
-    bird_name = y.split('/')[-2].split('.')[1].replace('_', ' ')
+    id = get_id_from_path(y)
+    name = Dataset.attr_data[Dataset.attr_data['image_info_id'] == id]['title'].values[0]
     image_path = y
 
     with open(image_path, 'rb') as f:
@@ -27,7 +32,7 @@ def display_hover(hover_data):
 
     content = [
         html.Img(src=encode_image(image), style={"width": "100%"}), 
-        html.P(bird_name, style={"font-weight": "bold", "font-size": "14px"}),
+        html.P(name, style={"font-weight": "bold", "font-size": "14px"}),
     ]
     if z > 0: 
         certainty = '(guessing)' if z == 1 else '(probably)' if z == 2 else '(definitely)'
@@ -46,5 +51,9 @@ def display_hover(hover_data):
 )
 def heatmap_is_clicked(click_data):
     print('Heatmap is clicked')
-    class_name = click_data['points'][0]['y'].split('/')[-2].split('.')[1].replace('_', ' ')
-    return {'function': f'params.data.class_name == "{class_name}"'}
+
+    id = get_id_from_path(click_data['points'][0]['y'])
+    name = Dataset.attr_data[Dataset.attr_data['image_info_id'] == id]['title'].values[0]
+
+    # TODO: what to filter on?
+    return {'function': f'params.data.class_name == "{name}"'}

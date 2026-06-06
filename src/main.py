@@ -1,3 +1,5 @@
+from src.dataloaders.art_dataset_loader import DB_FILE_PATH
+
 from dash import Dash, html, dcc
 from src import config
 from src.Dataset import Dataset
@@ -6,6 +8,7 @@ from src.widgets.table import create_table
 from src.widgets import agent
 import dash_bootstrap_components as dbc
 
+# need to import callbacks to register them, even if they are not used directly in this file
 import callbacks.table
 import callbacks.scatterplot
 import callbacks.projection_radio_buttons
@@ -64,7 +67,7 @@ def run_ui():
 
 def main():
     if not Dataset.files_exist():
-        print('File', config.AUGMENTED_DATASET_PATH, 'missing or file', config.ATTRIBUTE_DATA_PATH, 'missing or directory', config.IMAGES_DIR, 'missing')
+        print('File', config.AUGMENTED_DATASET_PATH, 'missing or file', DB_FILE_PATH, 'missing or directory', config.IMAGES_DIR, 'missing')
         print('Creating dataset.')
         Dataset.download()
 

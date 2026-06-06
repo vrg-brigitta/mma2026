@@ -20,6 +20,8 @@ GENERATED_IMAGE_SIZE = (200, 300)
 
 # dataset extraction configuration
 DATASET_SAMPLE_SIZE = 1000 # number of images in the CUB-200-2011 dataset is 11788, that is the max value for this parameter
+# 889868 is the number of images in the Art Dataset
+RANDOM_SAMPLING = False # if false, the first DATASET_SAMPLE_SIZE images will be taken, otherwise a random sample of size DATASET_SAMPLE_SIZE will be taken
 
 
 # path configuration

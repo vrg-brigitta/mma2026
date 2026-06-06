@@ -40,15 +40,17 @@ my_layout = {
 
 
 def create_graph(selected_rows=None):
-    return cyto.Cytoscape(
-        id="graph",
-        elements=build_elements(selected_rows),
-        style={"width": "100%", "height": "100%"},
-        className="stretchy-widget border-widget",
-        layout=my_layout,
-        stylesheet=my_stylesheet,
+    return None
+    # return cyto.Cytoscape(
+    #     id="graph",
+    #     elements=build_elements(selected_rows),
+    #     style={"width": "100%", "height": "100%"},
+    #     className="stretchy-widget border-widget",
+    #     layout=my_layout,
+    #     stylesheet=my_stylesheet,
             
-    )
+    # )
+
 def build_elements(selected_rows):
     if not selected_rows:
         bird_names = set(Dataset.data["class_name"].unique())

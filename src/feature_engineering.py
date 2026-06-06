@@ -1,8 +1,9 @@
+import os
+
 import PIL.Image
 from tqdm import tqdm
 import clip
 import torch
-import pandas
 import numpy
 from umap import UMAP
 from sklearn.manifold import TSNE
@@ -12,8 +13,8 @@ from src import config
 def calculate_clip_embeddings(dataset):
     model, preprocess = clip.load('ViT-B/32', device='cpu')
     clip_embeddings = []
-    for image_name in tqdm(dataset['image_path']):
-        image = PIL.Image.open(image_name)
+    for image_id in tqdm(dataset['id']):
+        image = PIL.Image.open(os.path.join(config.IMAGES_DIR, str(image_id) + '.jpg'))
         image_input = preprocess(image).unsqueeze(0).to('cpu')
         with torch.no_grad():
             clip_embeddings.append(model.encode_image(image_input).cpu().numpy())
@@ -32,9 +33,12 @@ def calculate_tsne(clip_embeddings):
     tsne_x, tsne_y = tsne_embeddings[:, 0], tsne_embeddings[:, 1]
     return tsne_x, tsne_y
 
-def generate_projection_data():
-    dataset = pandas.read_csv(config.DATASET_PATH)
-    dataset_sample = dataset.sample(n=config.DATASET_SAMPLE_SIZE, random_state=1) if config.DATASET_SAMPLE_SIZE else dataset
+def generate_projection_data(dataset):
+    if config.RANDOM_SAMPLING:
+        dataset_sample = dataset.sample(n=config.DATASET_SAMPLE_SIZE, random_state=1) if config.DATASET_SAMPLE_SIZE else dataset
+    else:
+        dataset_sample = dataset.head(config.DATASET_SAMPLE_SIZE) if config.DATASET_SAMPLE_SIZE else dataset
+    
     print('Calculating clip embeddings')
     clip_embeddings = calculate_clip_embeddings(dataset_sample)
     umap_x, umap_y = calculate_umap(clip_embeddings)

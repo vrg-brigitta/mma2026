@@ -1,9 +1,36 @@
+import sqlite3
 import os
 
 import pandas
 
 from src import config, feature_engineering
-from src.dataloaders import cub_loader
+from src.dataloaders import art_dataset_loader
+from src.dataloaders.art_dataset_loader import DB_FILE_PATH
+
+class DataBase:
+    def __init__(self) -> None:
+        self.sql_file = DB_FILE_PATH
+
+    @staticmethod
+    def connect_to_db(func):
+        def wrapper(*args, **kw):
+            self = args[0]
+            with sqlite3.connect(self.sql_file) as self.con:
+                return func(*args, **kw)
+        return wrapper
+    
+    @connect_to_db
+    def get_all(self, tb_name) -> list:
+        cur = self.con.cursor()
+        cur.execute('SELECT * FROM {};'.format(tb_name))
+        return cur.fetchall()
+    
+    @connect_to_db
+    def get_images_with_artwork_info(self) -> list:
+        cur = self.con.cursor()
+        cur.execute('SELECT * FROM Image_Info LEFT JOIN Artworks ON Image_Info.id = Artworks.image_info_id;')
+        return cur.fetchall()
+
 
 class Dataset:
     data = None
@@ -11,10 +38,16 @@ class Dataset:
     attr_data = None
     @staticmethod
     def load():
-        Dataset.data = pandas.read_csv(config.AUGMENTED_DATASET_PATH, index_col='image_id')
-        Dataset.count = Dataset.data['class_id'].value_counts()
-        Dataset.data['species_name'] = Dataset.data['class_name'].apply(lambda x: x.split()[-1])
-        Dataset.attr_data = pandas.read_csv(config.ATTRIBUTE_DATA_PATH, index_col='image_id')
+        Dataset.data = pandas.read_csv(config.AUGMENTED_DATASET_PATH, index_col='id')
+        print('Dataset loaded with', len(Dataset.data), 'rows')
+
+        Dataset.count = Dataset.data.index.value_counts()
+
+        db = DataBase()
+        artworks_columns = ('id', 'title', 'description', 'culture', 'period', 'dynasty', 'reign', 'type', 'genre', 'style', 'object_date', 'object_begin_date', 'object_end_date', 'location', 'medium', 'dataset_id', 'object_info_id', 'image_info_id',  'reference_date', 'reference_country', 'reference_region', 'preprocessed_description')
+        Dataset.attr_data = pandas.DataFrame(db.get_all('Artworks'), columns=artworks_columns)
+
+        # TODO: append artist info (as attributes) too
 
     @staticmethod
     def get():
@@ -30,10 +63,16 @@ class Dataset:
 
     @staticmethod
     def files_exist():
-        return os.path.isfile(config.AUGMENTED_DATASET_PATH) and os.path.isdir(config.IMAGES_DIR) and os.path.isfile(config.ATTRIBUTE_DATA_PATH)
+        return os.path.isfile(DB_FILE_PATH) and os.path.isdir(config.IMAGES_DIR)
 
     @staticmethod
     def download():
-        cub_loader.load()
-        feature_engineering.generate_projection_data()
-        cub_loader.cleanup()
+        db = DataBase()
+        image_info_columns = ('id', 'primary_image', 'additional_images', 'num_additional_images', 'alt_primary_image', 'file_path')
+        artworks_columns = ('artwork_id', 'title', 'description', 'culture', 'period', 'dynasty', 'reign', 'type', 'genre', 'style', 'object_date', 'object_begin_date', 'object_end_date', 'location', 'medium', 'dataset_id', 'object_info_id', 'image_info_id',  'reference_date', 'reference_country', 'reference_region', 'preprocessed_description')
+
+        original_data = pandas.DataFrame(db.get_images_with_artwork_info(), columns=image_info_columns + artworks_columns)
+        print(original_data.head(2))
+        # art_dataset_loader.load()
+        feature_engineering.generate_projection_data(original_data)
+        # art_dataset_loader.cleanup()
