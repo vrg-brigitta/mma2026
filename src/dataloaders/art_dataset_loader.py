@@ -47,6 +47,9 @@ def load():
         if not os.path.isfile(save_path):
             wget.download(file_path, save_path)
 
+        if config.RANDOM_SAMPLING is False and id >= config.DATASET_SAMPLE_SIZE:
+            break
+
 
 def cleanup():
     print('Resizing images')
