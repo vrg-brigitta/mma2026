@@ -41,9 +41,9 @@ def generate_prompt_from_characteristic(characteristics_html, _):
     characteristics = map(lambda x: x['props']['children'], characteristics_html)
     cleaned_phrases = list(map(lambda x: x.replace("has ", "").replace(":", "").replace("_", " ").strip(), characteristics))
     if len(cleaned_phrases) > 1:
-        return "A bird with " +", ".join(cleaned_phrases[:-1]) + ", and " + cleaned_phrases[-1] + "."
+        return "An art that is " +", ".join(cleaned_phrases[:-1]) + ", and " + cleaned_phrases[-1] + "."
     elif len(cleaned_phrases) == 1:
-        return f"A bird with {cleaned_phrases[0]}."
+        return f"An art that is {cleaned_phrases[0]}."
     return ''
 
 @callback(

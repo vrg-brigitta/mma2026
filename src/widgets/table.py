@@ -15,7 +15,7 @@ def create_table():
 def create_table_grid():
     return dash_ag_grid.AgGrid(
         columnDefs=[
-            {"field": "class_name"},
+            {"field": "genre"},
             {"field": "count_in_selection"},
             {"field": "total_count", }
         ],

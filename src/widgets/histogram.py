@@ -46,11 +46,11 @@ def draw_histogram(selected_data):
     df = Dataset.get().loc[selected_data.index]
 
     # Grouping and counting occurrences
-    class_counts = df['class_name'].value_counts().reset_index()
-    class_counts.columns = ['class_name', 'count']
+    class_counts = df['genre'].value_counts().reset_index()
+    class_counts.columns = ['genre', 'count']
 
     # Plotting with Plotly Express
-    fig = px.histogram(class_counts, x='class_name', y='count')
+    fig = px.histogram(class_counts, x='genre', y='count')
     fig.update_xaxes(categoryorder='total descending')  # Sort categories by count
 
     fig.update_layout(

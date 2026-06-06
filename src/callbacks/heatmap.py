@@ -53,7 +53,7 @@ def heatmap_is_clicked(click_data):
     print('Heatmap is clicked')
 
     id = get_id_from_path(click_data['points'][0]['y'])
-    name = Dataset.attr_data[Dataset.attr_data['image_info_id'] == id]['title'].values[0]
+    genre = Dataset.attr_data[Dataset.attr_data['image_info_id'] == id]['genre'].values[0]
 
     # TODO: what to filter on?
-    return {'function': f'params.data.class_name == "{name}"'}
+    return {'function': f'params.data.genre == "{genre}"'}

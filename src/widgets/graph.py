@@ -40,27 +40,28 @@ my_layout = {
 
 
 def create_graph(selected_rows=None):
-    return None
-    # return cyto.Cytoscape(
-    #     id="graph",
-    #     elements=build_elements(selected_rows),
-    #     style={"width": "100%", "height": "100%"},
-    #     className="stretchy-widget border-widget",
-    #     layout=my_layout,
-    #     stylesheet=my_stylesheet,
-            
-    # )
+    return cyto.Cytoscape(
+        id="graph",
+        elements=build_elements(selected_rows),
+        style={"width": "100%", "height": "100%"},
+        className="stretchy-widget border-widget",
+        layout=my_layout,
+        stylesheet=my_stylesheet,
+    )
 
 def build_elements(selected_rows):
+    return []
+
     if not selected_rows:
-        bird_names = set(Dataset.data["class_name"].unique())
+        genres = set(Dataset.attr_data["genre"].unique())
     else:
-        bird_names = {row["class_name"] for row in selected_rows}
+        genres = {row["genre"] for row in selected_rows}
 
     edge_weights = defaultdict(int)
 
-    for bird in bird_names:
-        bird_sep = bird.split()
+    # TODO: need a graph or not, if yes with what content
+    for genre in genres:
+        bird_sep = genre.split()
         for i in range (len(bird_sep)):
             for j in range(i+1, len(bird_sep)):
                 word1, word2 = bird_sep[i], bird_sep[j]

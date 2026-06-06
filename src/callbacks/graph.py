@@ -14,5 +14,5 @@ def graph_is_clicked(tap_node_data):
     
     word = tap_node_data['label']  
     print(word)
-    return {'function': f'params.data.class_name.includes("{word}")'}
+    return {'function': f'params.data.genre.includes("{word}")'}
 

@@ -41,7 +41,7 @@ class Dataset:
         Dataset.data = pandas.read_csv(config.AUGMENTED_DATASET_PATH, index_col='id')
         print('Dataset loaded with', len(Dataset.data), 'rows')
 
-        Dataset.count = Dataset.data.index.value_counts()
+        Dataset.count = Dataset.data['genre'].value_counts()
 
         db = DataBase()
         artworks_columns = ('id', 'title', 'description', 'culture', 'period', 'dynasty', 'reign', 'type', 'genre', 'style', 'object_date', 'object_begin_date', 'object_end_date', 'location', 'medium', 'dataset_id', 'object_info_id', 'image_info_id',  'reference_date', 'reference_country', 'reference_region', 'preprocessed_description')
