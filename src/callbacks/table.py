@@ -15,7 +15,7 @@ from src.widgets import graph, gallery, scatterplot, histogram, heatmap, wordclo
      Output("graph", "elements"), 
      Output('histogram', 'figure'),
      #Output("heatmap", "figure"),
-     #Output("characteristics-description", 'children'),
+     Output("characteristics-description", 'children'),
      Output("generated-image", 'src')
     ],
     [Input("grid", "selectedRows"),
@@ -71,7 +71,7 @@ def table_row_is_selected(selected_rows, added_rows, scatterplot_fig):
     # TODO: fix the heatmap or remove
     #heatmap_fig = heatmap.draw_heatmap(data_selected)
 
-    #characteristics_description = agent.get_top_characteristics(data_selected)
+    characteristics_description = agent.get_top_characteristics(data_selected)
 
     #return wordcloud_data, gallery_children, scatterplot_fig, graph_elements, histogram_fig, heatmap_fig, characteristics_description, ''
-    return wordcloud_data, gallery_children, scatterplot_fig, graph_elements, histogram_fig, ''
+    return wordcloud_data, gallery_children, scatterplot_fig, graph_elements, histogram_fig, characteristics_description, ''

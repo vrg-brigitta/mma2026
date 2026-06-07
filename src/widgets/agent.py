@@ -25,14 +25,28 @@ def generate_agent_widget():
     ], className='agent-container border-widget')
 
 def get_top_characteristics(selected_data):
-    if not len(selected_data):
+    if selected_data is None or selected_data.empty:
         return []
 
     attr_data = Dataset.get_attr_data().loc[selected_data.index]
 
-    characteristic_pairs = sorted(
-        attr_data.columns.map(lambda col: (col, attr_data[col].sum())),
-        key=lambda t: t[1],
+    characteristics = []
+    for col in attr_data.columns:
+        if col == 'num_additional_images':
+            continue
+
+        counts = attr_data[col].value_counts(dropna=True)
+        duplicate_counts = counts[counts > 1]
+        duplicate_rows = int(duplicate_counts.sum())
+        if duplicate_rows > 0:
+            top_shared_value = duplicate_counts.idxmax()
+            characteristics.append((col, top_shared_value, duplicate_rows))
+
+    top_characteristics = sorted(
+        characteristics,
+        key=lambda item: item[2],
         reverse=True
     )[:10]
-    return list(map(lambda x: html.P(f'{x[0]}'), characteristic_pairs))
+
+    return [html.P(f"{col}: {value}")
+            for col, value, count in top_characteristics]
