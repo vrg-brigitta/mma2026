@@ -10,7 +10,7 @@ from src.widgets import graph, gallery, scatterplot, histogram, heatmap, wordclo
 
 @callback(
     [Output('wordcloud', 'list'),
-     #Output("gallery", "children"),
+     Output("gallery", "children"),
      Output("scatterplot", "figure"),
      Output("graph", "elements"), 
      Output('histogram', 'figure'),
@@ -64,8 +64,7 @@ def table_row_is_selected(selected_rows, added_rows, scatterplot_fig):
         graph_elements = graph.build_elements(graph_input)  
     sample_data = data_selected.sample(min(len(data_selected), config.IMAGE_GALLERY_SIZE), random_state=1)
 
-    # TODO: fix the gallery or remove
-    #gallery_children = gallery.create_gallery_children(sample_data['file_path'].values, sample_data['genre'].values)
+    gallery_children = gallery.create_gallery_children(sample_data.index.values, sample_data['genre'].values)
 
     histogram_fig = histogram.draw_histogram(selected_data=data_selected)
 
@@ -75,4 +74,4 @@ def table_row_is_selected(selected_rows, added_rows, scatterplot_fig):
     #characteristics_description = agent.get_top_characteristics(data_selected)
 
     #return wordcloud_data, gallery_children, scatterplot_fig, graph_elements, histogram_fig, heatmap_fig, characteristics_description, ''
-    return wordcloud_data, scatterplot_fig, graph_elements, histogram_fig, ''
+    return wordcloud_data, gallery_children, scatterplot_fig, graph_elements, histogram_fig, ''

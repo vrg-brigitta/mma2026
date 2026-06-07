@@ -1,3 +1,5 @@
+import os
+
 import dash_bootstrap_components as dbc
 from dash import html
 
@@ -8,15 +10,17 @@ from src.utils import encode_image
 def create_gallery():
     return html.Div([], id='gallery', className='stretchy-widget border-widget gallery')
 
-def create_gallery_children(image_paths, class_names):
+def create_gallery_children(image_ids, class_names):
     image_rows = []
     image_id = 0
-    for i in range(0, len(image_paths), config.IMAGE_GALLERY_ROW_SIZE):
+    for i in range(0, len(image_ids), config.IMAGE_GALLERY_ROW_SIZE):
         image_cols = []
         for j in range(config.IMAGE_GALLERY_ROW_SIZE):
-            if i + j >= len(image_paths):
+            if i + j >= len(image_ids):
                 break
-            with open(image_paths[i + j], 'rb') as f:
+
+            image_path = os.path.join(config.IMAGES_DIR, str(image_ids[i + j]) + '.jpg')
+            with open(image_path, 'rb') as f:
                 image = f.read()
             class_name = class_names[i + j]
             html_card = html.A([
