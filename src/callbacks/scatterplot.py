@@ -16,11 +16,11 @@ def scatterplot_is_zoomed(scatterplot_fig, zoom_data):
     if len(zoom_data) == 1 and 'dragmode' in zoom_data:
         return dash.no_update
 
-    if 'xaxis.range[0]' not in zoom_data:
+    if not any(key in zoom_data for key in ['xaxis.range[0]', 'xaxis.range[1]', 'yaxis.range[0]', 'yaxis.range[1]']):
         return dash.no_update
 
     print('Scatterplot is zoomed')
-    return scatterplot.add_images_to_scatterplot(scatterplot_fig)
+    return scatterplot.add_images_to_scatterplot(scatterplot_fig, zoom_data)
 
 
 @callback(

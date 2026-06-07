@@ -43,9 +43,10 @@ class Dataset:
 
         Dataset.count = Dataset.data['genre'].value_counts()
 
-        db = DataBase()
-        artworks_columns = ('id', 'title', 'description', 'culture', 'period', 'dynasty', 'reign', 'type', 'genre', 'style', 'object_date', 'object_begin_date', 'object_end_date', 'location', 'medium', 'dataset_id', 'object_info_id', 'image_info_id',  'reference_date', 'reference_country', 'reference_region', 'preprocessed_description')
-        Dataset.attr_data = pandas.DataFrame(db.get_all('Artworks'), columns=artworks_columns)
+        # db = DataBase()
+        # artworks_columns = ('id', 'title', 'description', 'culture', 'period', 'dynasty', 'reign', 'type', 'genre', 'style', 'object_date', 'object_begin_date', 'object_end_date', 'location', 'medium', 'dataset_id', 'object_info_id', 'image_info_id',  'reference_date', 'reference_country', 'reference_region', 'preprocessed_description')
+        # attributes = pandas.DataFrame(db.get_all('Artworks'), columns=artworks_columns)
+        Dataset.attr_data = Dataset.data # data already contains all the attributes from Artworks table
 
         # TODO: append artist info (as attributes) too
 

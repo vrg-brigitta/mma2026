@@ -1,3 +1,5 @@
+import os
+
 from PIL import Image
 from dash import dcc
 import plotly.express
@@ -6,19 +8,42 @@ from src import config
 import plotly.graph_objects as go
 
 
-def highlight_class_on_scatterplot(scatterplot, class_ids):
-    if class_ids:
-        colors = Dataset.get()['class_id'].map(lambda x: config.SCATTERPLOT_SELECTED_COLOR if x in class_ids else config.SCATTERPLOT_COLOR)
+def highlight_class_on_scatterplot(scatterplot, genres):
+    if genres:
+        colors = Dataset.get()['genre'].map(lambda x: config.SCATTERPLOT_SELECTED_COLOR if x in genres else config.SCATTERPLOT_COLOR)
     else:
         colors = config.SCATTERPLOT_COLOR
     scatterplot['data'][0]['marker'] = {'color': colors}
 
 
-def add_images_to_scatterplot(scatterplot_fig):
-    scatterplot_fig['layout']['images'] = []
+def add_images_to_scatterplot(scatterplot_fig, zoom_data=None):
+    if zoom_data is None:
+        zoom_data = {}
 
-    min_x, max_x = map(float, scatterplot_fig['layout']['xaxis']['range'])
-    min_y, max_y = map(float, scatterplot_fig['layout']['yaxis']['range'])
+    xaxis = scatterplot_fig['layout'].setdefault('xaxis', {})
+    yaxis = scatterplot_fig['layout'].setdefault('yaxis', {})
+
+    if 'xaxis.range[0]' in zoom_data and 'xaxis.range[1]' in zoom_data:
+        min_x = float(zoom_data['xaxis.range[0]'])
+        max_x = float(zoom_data['xaxis.range[1]'])
+        xaxis['range'] = [min_x, max_x]
+        xaxis['autorange'] = False
+    else:
+        if 'range' not in xaxis:
+            return scatterplot_fig
+        min_x, max_x = map(float, xaxis['range'])
+
+    if 'yaxis.range[0]' in zoom_data and 'yaxis.range[1]' in zoom_data:
+        min_y = float(zoom_data['yaxis.range[0]'])
+        max_y = float(zoom_data['yaxis.range[1]'])
+        yaxis['range'] = [min_y, max_y]
+        yaxis['autorange'] = False
+    else:
+        if 'range' not in yaxis:
+            return scatterplot_fig
+        min_y, max_y = map(float, yaxis['range'])
+
+    scatterplot_fig['layout']['images'] = []
 
     x_col = scatterplot_fig['layout']['xaxis']['title']['text']
     y_col = scatterplot_fig['layout']['yaxis']['title']['text']
@@ -33,7 +58,8 @@ def add_images_to_scatterplot(scatterplot_fig):
             return scatterplot_fig
 
     for x, y, image_id in images_in_zoom:
-        image_path = dataset.loc[image_id]['image_path']
+        # image_path = dataset.loc[image_id]['file_path']
+        image_path = os.path.join(config.IMAGES_DIR, str(image_id) + '.jpg')
         scatterplot_fig['layout']['images'].append(dict(
             x=x,
             y=y,

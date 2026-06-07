@@ -10,12 +10,12 @@ from src.widgets import graph, gallery, scatterplot, histogram, heatmap, wordclo
 
 @callback(
     [Output('wordcloud', 'list'),
-     Output("gallery", "children"),
+     #Output("gallery", "children"),
      Output("scatterplot", "figure"),
      Output("graph", "elements"), 
      Output('histogram', 'figure'),
-     Output("heatmap", "figure"),
-     Output("characteristics-description", 'children'),
+     #Output("heatmap", "figure"),
+     #Output("characteristics-description", 'children'),
      Output("generated-image", 'src')
     ],
     [Input("grid", "selectedRows"),
@@ -33,10 +33,10 @@ def table_row_is_selected(selected_rows, added_rows, scatterplot_fig):
     scatterplot_fig['layout']['images'] = []
 
     if selected_rows:
-        classes_in_scatterplot = data_selected['genre'].unique()
-        selected_classes = set(map(lambda row: row['genre'], selected_rows))
-        data_selected = data_selected[data_selected['genre'].isin(selected_classes)]
-        scatterplot.highlight_class_on_scatterplot(scatterplot_fig, selected_classes)
+        genres_in_scatterplot = data_selected['genre'].unique()
+        selected_genres = set(map(lambda row: row['genre'], selected_rows))
+        data_selected = data_selected[data_selected['genre'].isin(selected_genres)]
+        scatterplot.highlight_class_on_scatterplot(scatterplot_fig, selected_genres)
         count_in_section = numpy.array([row['count_in_selection'] for row in selected_rows])
         wordcloud_data = sorted([[row['genre'], count] for row, count in zip(
             selected_rows,
@@ -72,6 +72,7 @@ def table_row_is_selected(selected_rows, added_rows, scatterplot_fig):
     # TODO: fix the heatmap or remove
     #heatmap_fig = heatmap.draw_heatmap(data_selected)
 
-    characteristics_description = agent.get_top_characteristics(data_selected)
+    #characteristics_description = agent.get_top_characteristics(data_selected)
 
-    return wordcloud_data, gallery_children, scatterplot_fig, graph_elements, histogram_fig, heatmap_fig, characteristics_description, ''
+    #return wordcloud_data, gallery_children, scatterplot_fig, graph_elements, histogram_fig, heatmap_fig, characteristics_description, ''
+    return wordcloud_data, scatterplot_fig, graph_elements, histogram_fig, ''

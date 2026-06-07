@@ -1,3 +1,9 @@
+import sys
+from pathlib import Path
+
+# Add parent directory to path to allow importing src module
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 from src.dataloaders.art_dataset_loader import DB_FILE_PATH
 
 from dash import Dash, html, dcc
