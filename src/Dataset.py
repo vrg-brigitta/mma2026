@@ -64,7 +64,7 @@ class Dataset:
 
     @staticmethod
     def files_exist():
-        return os.path.isfile(DB_FILE_PATH) and os.path.isdir(config.IMAGES_DIR)
+        return os.path.isfile(DB_FILE_PATH) and os.path.isdir(config.IMAGES_DIR) and os.path.isfile(config.AUGMENTED_DATASET_PATH)
 
     @staticmethod
     def download():

@@ -59,11 +59,14 @@ def run_ui():
     ], fluid=True, id='container')
 
     app.run(debug=True, use_reloader=False)
-    
+
 
 def main():
     if not Dataset.files_exist():
-        print('File', config.AUGMENTED_DATASET_PATH, 'missing or file', DB_FILE_PATH, 'missing or directory', config.IMAGES_DIR, 'missing')
+        print('Missing one of the following dataset paths:')
+        print('-', config.AUGMENTED_DATASET_PATH)
+        print('-', DB_FILE_PATH)
+        print('-', config.IMAGES_DIR)
         print('Creating dataset.')
         Dataset.download()
 
