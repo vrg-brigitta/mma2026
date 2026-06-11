@@ -1,5 +1,9 @@
 import os
 
+# This is needed to prevent numba from using multiple threads, which can cause
+# issues on macOS. It is crucial to place it before all the other imports.
+os.environ["NUMBA_NUM_THREADS"] = "1"
+
 import PIL.Image
 from tqdm import tqdm
 import clip
@@ -41,10 +45,10 @@ def generate_projection_data(dataset):
     
     print('Calculating clip embeddings')
     clip_embeddings = calculate_clip_embeddings(dataset_sample)
-    umap_x, umap_y = calculate_umap(clip_embeddings)
     print('Calculating umap')
-    tsne_x, tsne_y = calculate_tsne(clip_embeddings)
+    umap_x, umap_y = calculate_umap(clip_embeddings)
     print('Calculating tsne')
+    tsne_x, tsne_y = calculate_tsne(clip_embeddings)
     augmented_dataset = dataset_sample.assign(umap_x=umap_x, umap_y=umap_y, tsne_x=tsne_x, tsne_y=tsne_y)
     augmented_dataset.to_csv(config.AUGMENTED_DATASET_PATH, index=False)
     print('Saving augmented dataset to', config.AUGMENTED_DATASET_PATH)
