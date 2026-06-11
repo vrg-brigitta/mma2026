@@ -5,7 +5,7 @@ from dash.exceptions import PreventUpdate
 
 from src import config
 from src.Dataset import Dataset
-from src.widgets import graph, gallery, scatterplot, histogram, heatmap, wordcloud, agent
+from src.widgets import exploration, graph, gallery, scatterplot, histogram, heatmap, wordcloud
 
 
 @callback(
@@ -71,7 +71,7 @@ def table_row_is_selected(selected_rows, added_rows, scatterplot_fig):
     # TODO: fix the heatmap or remove
     #heatmap_fig = heatmap.draw_heatmap(data_selected)
 
-    characteristics_description = agent.get_top_characteristics(data_selected)
+    characteristics_description = exploration.get_top_characteristics(data_selected)
 
     #return wordcloud_data, gallery_children, scatterplot_fig, graph_elements, histogram_fig, heatmap_fig, characteristics_description, ''
     return wordcloud_data, gallery_children, scatterplot_fig, graph_elements, histogram_fig, characteristics_description, ''

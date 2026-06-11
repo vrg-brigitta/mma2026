@@ -9,9 +9,9 @@ from src.dataloaders.art_dataset_loader import DB_FILE_PATH
 from dash import Dash, html, dcc
 from src import config
 from src.Dataset import Dataset
-from src.widgets import projection_radio_buttons, gallery, scatterplot, wordcloud, graph, heatmap, histogram, help_popup
+from src.widgets import projection_radio_buttons, gallery, scatterplot, wordcloud, graph, heatmap, histogram, help_popup, pipeline
 from src.widgets.table import create_table
-from src.widgets import agent
+from src.widgets import exploration
 import dash_bootstrap_components as dbc
 
 # need to import callbacks to register them, even if they are not used directly in this file
@@ -22,54 +22,44 @@ import callbacks.heatmap
 import callbacks.wordcloud
 import callbacks.histogram
 import callbacks.gallery
-import callbacks.deselect_button
-import callbacks.help_button
 import callbacks.graph
-import callbacks.agent
+import callbacks.exploration
 
 def run_ui():
     external_stylesheets = [dbc.themes.BOOTSTRAP]
     app = Dash(__name__, external_stylesheets=external_stylesheets)
     
     help_popup_widget = help_popup.create_help_popup()
-    projection_radio_buttons_widget = projection_radio_buttons.create_projection_radio_buttons()
-    table_widget = create_table()
     scatterplot_widget = scatterplot.create_scatterplot(config.DEFAULT_PROJECTION)
-    wordcloud_widget = wordcloud.create_wordcloud()
-    gallery_widget = gallery.create_gallery()
-    graph_widget = graph.create_graph()
-    heatmap_widget = heatmap.create_heatmap()
-    histogram_widget = histogram.create_histogram()
-    agent_widget = agent.generate_agent_widget()
+ 
+    pipeline_widget = pipeline.create_pipeline_widget()
+    agent_widget = exploration.generate_agent_widget()
+
+    table_widget = create_table()
 
     right_tab = dcc.Tabs([
-        dcc.Tab(label='wordcloud', children=wordcloud_widget),
-        dcc.Tab(label='images', children=gallery_widget),
-        dcc.Tab(label='histogram', children=histogram_widget),
-        dcc.Tab(label='graph', children=graph_widget),
-        dcc.Tab(label='heatmap', children=heatmap_widget),
-        dcc.Tab(label='agent', children=agent_widget),
+        dcc.Tab(label='Pipeline', children=pipeline_widget),
+        dcc.Tab(label='Exploration', children=agent_widget),
     ])
 
     app.layout = dbc.Container([
         help_popup_widget,
         dbc.Stack([
-            projection_radio_buttons_widget,
-            dbc.Button('Deselect everything', id='deselect-button', class_name="btn btn-outline-primary ms-auto header-button"),
-            dbc.Button('Help', id='help-button', class_name="btn btn-outline-primary header-button")
+            dbc.Label('Art Exploration Dashboard', className='header-title'),
+            # dbc.Button('Deselect everything', id='deselect-button', class_name="btn btn-outline-primary ms-auto header-button"),
+            # dbc.Button('Help', id='help-button', class_name="btn btn-outline-primary header-button")
         ], id='header', direction="horizontal"),
         dbc.Row([
             dbc.Col(scatterplot_widget, width=6, className='main-col'),
             dbc.Col(right_tab, width=6, className='main-col')],
-            className='top-row', justify='between'),
+            justify='between', className='main-row'),
         dbc.Row([
             dbc.Col(table_widget, className='main-col')
-        ], className='bottom-row')
+        ], className='hidden-row')
     ], fluid=True, id='container')
 
     app.run(debug=True, use_reloader=False)
     
-
 
 def main():
     if not Dataset.files_exist():

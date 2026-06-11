@@ -79,6 +79,11 @@
     margin-bottom: 50px;
 }
 
+.generated-pipeline-container{
+    display: flex;
+    justify-content: center;
+}
+
 .generated-image-container{
     display: flex;
     justify-content: center;
@@ -105,17 +110,18 @@
     position: relative;
 }
 
+.hidden-row {
+    display: none;
+}
+
+.main-row {
+    height: 100%;
+    margin-top: 20px;
+}
+
 .main-col {
     height: 100%;
     padding: 0;
-}
-
-.top-row {
-    height: 70%;
-}
-
-.bottom-row {
-    height: 30%;
 }
 
 .stretchy-widget {
