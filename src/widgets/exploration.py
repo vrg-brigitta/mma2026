@@ -4,7 +4,7 @@ from src.widgets import graph, heatmap, histogram, gallery, wordcloud, image_gen
 from src.Dataset import Dataset
 import dash_bootstrap_components as dbc
 
-def generate_agent_widget():
+def create_explore_tab_widget():
     wordcloud_widget = wordcloud.create_wordcloud()
     gallery_widget = gallery.create_gallery()
     #graph_widget = graph.create_graph()
@@ -32,4 +32,4 @@ def generate_agent_widget():
 
         tabs
 
-    ], className='agent-container border-widget')
+    ], className='sidebar-container border-widget')

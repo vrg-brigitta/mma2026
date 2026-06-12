@@ -1,30 +1,55 @@
 import dash.dcc
 from dash import html, dcc
-from src.Dataset import Dataset
 import dash_bootstrap_components as dbc
 
-from src.widgets.projection_radio_buttons import create_projection_radio_buttons
+from src.widgets.pipeline_builder import create_pipeline_builder
 
 
-def create_pipeline_widget():
-    projection_radio_buttons = create_projection_radio_buttons();
+def create_pipeline_tab_widget():
+    pipeline_builder = create_pipeline_builder()
 
     return dbc.Stack([
-        html.H5('Steps taken to process data and generate insights'),
-        html.Div(id='pipeline-steps'),
-        projection_radio_buttons,
-        html.H5('Prompt'),
-        dash.dcc.Textarea(id='pipeline-prompt'),
         dbc.Stack([
-            html.Button("Generate pipeline", id="generate-pipeline-button", className="btn btn-outline-primary")
-        ],
-            direction="horizontal",
-            gap=2,
-            className="agent-buttons"
+            html.Div(
+                [
+                    html.H5("Current pipeline"),
+                    html.Button(
+                        "Clear",
+                        id="clear-pipeline-btn",
+                        className="btn clear-pipeline-btn btn-sm btn-outline-danger"
+                    ),
+                ],
+                className="d-flex justify-content-between align-items-center"
+            ),
+            html.Div(id="pipeline-steps"),
+            pipeline_builder,
+
+            html.Hr(),
+
+            html.H5("Generate pipeline"),
+            dash.dcc.Textarea(
+                id="pipeline-prompt",
+                placeholder="I want to examine which themes are in this dataset",
+                style={"width": "100%", "height": 100},
+            ),
+            html.Button(
+                "Start generation",
+                id="generate-pipeline-btn",
+                className="btn btn-outline-primary mt-2",
+                disabled=True,
+            )
+        ]),
+        html.Button(
+            "Visualize",
+            id="visualize-btn",
+            className="btn btn-primary"
         ),
 
-        dcc.Loading(
-            type="circle",
-            children=html.Div(html.Img(id="generated-pipeline"), className='generated-pipeline-container')
-        ),
-    ], className='agent-container border-widget')
+        # dcc.Loading(
+        #     type="circle",
+        #     children=html.Div(
+        #         html.Img(id="generated-pipeline"),
+        #         className="generated-pipeline-container"
+        #     )
+        # ),
+    ], className="sidebar-container border-widget")

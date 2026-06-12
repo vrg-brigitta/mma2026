@@ -25,22 +25,23 @@ import callbacks.gallery
 #import callbacks.graph
 import callbacks.exploration
 import callbacks.image_generator
+import callbacks.pipeline_builder
 
 def run_ui():
     external_stylesheets = [dbc.themes.BOOTSTRAP]
     app = Dash(__name__, external_stylesheets=external_stylesheets)
-    
+
     help_popup_widget = help_popup.create_help_popup()
     scatterplot_widget = scatterplot.create_scatterplot(config.DEFAULT_PROJECTION)
  
-    pipeline_widget = pipeline.create_pipeline_widget()
-    agent_widget = exploration.generate_agent_widget()
+    pipeline_tab_widget = pipeline.create_pipeline_tab_widget()
+    explore_tab_widget = exploration.create_explore_tab_widget()
 
     table_widget = create_table()
 
     right_tab = dcc.Tabs([
-        dcc.Tab(label='Pipeline', children=pipeline_widget),
-        dcc.Tab(label='Explore', children=agent_widget),
+        dcc.Tab(label='Pipeline', children=pipeline_tab_widget),
+        dcc.Tab(label='Explore', children=explore_tab_widget),
     ])
 
     app.layout = dbc.Container([
@@ -51,8 +52,8 @@ def run_ui():
             # dbc.Button('Help', id='help-button', class_name="btn btn-outline-primary header-button")
         ], id='header', direction="horizontal"),
         dbc.Row([
-            dbc.Col(scatterplot_widget, width=6, className='main-col'),
-            dbc.Col(right_tab, width=6, className='main-col')],
+            dbc.Col(scatterplot_widget, width=8, className='main-col'),
+            dbc.Col(right_tab, width=4, className='main-col')],
             justify='between', className='main-row'),
         dbc.Row([
             dbc.Col(table_widget, className='main-col')

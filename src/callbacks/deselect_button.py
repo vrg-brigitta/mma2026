@@ -7,12 +7,13 @@ from src.widgets import scatterplot
 @callback(
     Output('scatterplot', 'figure', allow_duplicate=True),
     Output('grid', 'deselectAll', allow_duplicate=True),
-    State('projection-radio-buttons', 'value'),
+    # State('projection-radio-buttons', 'value'),
     State('scatterplot', 'figure'),
     Input('deselect-button', 'n_clicks'),
     prevent_initial_call=True,
 )
-def deselect_button_is_pressed(projection_selected, scatterplot_fig, _):
+def deselect_button_is_pressed(scatterplot_fig, _):
+    projection_selected = 'UMAP'
     print('Deselect button is clicked')
     new_scatterplot_fig = scatterplot.create_scatterplot_figure(projection_selected)
     new_scatterplot_fig['layout'] = scatterplot_fig['layout']

@@ -22,7 +22,7 @@ def generate_image_generator_widget():
             type="circle",
             children=html.Div(html.Img(id="generated-image"), className='generated-image-container')
         ),
-    ], className='agent-container border-widget')
+    ], className='sidebar-container border-widget')
 
 def get_top_characteristics(selected_data):
     if selected_data is None or selected_data.empty:
