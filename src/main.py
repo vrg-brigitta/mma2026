@@ -18,12 +18,13 @@ import dash_bootstrap_components as dbc
 import callbacks.table
 import callbacks.scatterplot
 import callbacks.projection_radio_buttons
-import callbacks.heatmap
+#import callbacks.heatmap
 import callbacks.wordcloud
 import callbacks.histogram
 import callbacks.gallery
-import callbacks.graph
+#import callbacks.graph
 import callbacks.exploration
+import callbacks.image_generator
 
 def run_ui():
     external_stylesheets = [dbc.themes.BOOTSTRAP]
@@ -39,7 +40,7 @@ def run_ui():
 
     right_tab = dcc.Tabs([
         dcc.Tab(label='Pipeline', children=pipeline_widget),
-        dcc.Tab(label='Exploration', children=agent_widget),
+        dcc.Tab(label='Explore', children=agent_widget),
     ])
 
     app.layout = dbc.Container([

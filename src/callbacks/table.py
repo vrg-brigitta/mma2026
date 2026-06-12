@@ -5,14 +5,14 @@ from dash.exceptions import PreventUpdate
 
 from src import config
 from src.Dataset import Dataset
-from src.widgets import exploration, graph, gallery, scatterplot, histogram, heatmap, wordcloud
+from src.widgets import exploration, graph, gallery, scatterplot, histogram, heatmap, wordcloud, image_generator
 
 
 @callback(
     [Output('wordcloud', 'list'),
      Output("gallery", "children"),
      Output("scatterplot", "figure"),
-     Output("graph", "elements"), 
+     #Output("graph", "elements"), 
      Output('histogram', 'figure'),
      #Output("heatmap", "figure"),
      Output("characteristics-description", 'children'),
@@ -46,7 +46,7 @@ def table_row_is_selected(selected_rows, added_rows, scatterplot_fig):
                 count_in_section.max())
         )], key=lambda x: x[1], reverse=True)
         print(wordcloud_data)
-        graph_elements = graph.build_elements(selected_rows)
+        #graph_elements = graph.build_elements(selected_rows)
     else:
         group_by_count = (data_selected.groupby(['genre'])['genre']
                           .agg('count')
@@ -60,8 +60,8 @@ def table_row_is_selected(selected_rows, added_rows, scatterplot_fig):
         )
         wordcloud_data = group_by_count[['genre', 'count_in_selection']].sort_values(by='count_in_selection', ascending=False).values
         scatterplot.highlight_class_on_scatterplot(scatterplot_fig, None)
-        graph_input = [{"genre": cn} for cn in data_selected["genre"].unique()]
-        graph_elements = graph.build_elements(graph_input)  
+        #graph_input = [{"genre": cn} for cn in data_selected["genre"].unique()]
+        #graph_elements = graph.build_elements(graph_input)  
     sample_data = data_selected.sample(min(len(data_selected), config.IMAGE_GALLERY_SIZE), random_state=1)
 
     gallery_children = gallery.create_gallery_children(sample_data.index.values, sample_data['genre'].values)
@@ -71,7 +71,7 @@ def table_row_is_selected(selected_rows, added_rows, scatterplot_fig):
     # TODO: fix the heatmap or remove
     #heatmap_fig = heatmap.draw_heatmap(data_selected)
 
-    characteristics_description = exploration.get_top_characteristics(data_selected)
+    characteristics_description = image_generator.get_top_characteristics(data_selected)
 
     #return wordcloud_data, gallery_children, scatterplot_fig, graph_elements, histogram_fig, heatmap_fig, characteristics_description, ''
-    return wordcloud_data, gallery_children, scatterplot_fig, graph_elements, histogram_fig, characteristics_description, ''
+    return wordcloud_data, gallery_children, scatterplot_fig, histogram_fig, characteristics_description, ''
