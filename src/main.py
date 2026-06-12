@@ -33,7 +33,7 @@ def run_ui():
 
     help_popup_widget = help_popup.create_help_popup()
     scatterplot_widget = scatterplot.create_scatterplot(config.DEFAULT_PROJECTION)
- 
+
     pipeline_tab_widget = pipeline.create_pipeline_tab_widget()
     explore_tab_widget = exploration.create_explore_tab_widget()
 

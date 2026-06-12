@@ -178,6 +178,12 @@ def render_pipeline(blocks):
     children = []
     blocks = blocks or []
 
+    if len(blocks) == 0:
+        return html.Div(
+            "No pipeline created yet. Add a first step or generate a full pipeline.",
+            className="text-muted mb-2"
+        )
+
     for i, step in enumerate(blocks):
         children.append(
             html.Div(
