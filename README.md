@@ -4,14 +4,14 @@
 git clone https://github.com/vrg-brigitta/mma2026
 cd mma2026
 python -m venv .venv
-source .venv/bin/activate (for Windows run: .venv\Scripts\activate)
+source .venv/bin/activate # (for Windows run: .venv\Scripts\activate)
 pip install -r requirements.txt
 ```
 
 ### Run
 On the root directory of the project run:
 ```
-export PYTHONPATH="$PYTHONPATH:$PWD" (for Windows run: set PYTHONPATH=%CD%)
+export PYTHONPATH="$PYTHONPATH:$PWD" # (for Windows run: set PYTHONPATH=%CD%)
 python src/main.py
 ```
 
