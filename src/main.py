@@ -49,7 +49,7 @@ def main():
 
     Dataset.load()
 
-    if len(Dataset.get()) != config.DATASET_SAMPLE_SIZE:
+    if config.DATASET_SAMPLE_SIZE and len(Dataset.get()) != config.DATASET_SAMPLE_SIZE:
         print('Sample size changed in the configuration. Recalculating features.')
         Dataset.download()
         Dataset.load()

@@ -58,19 +58,7 @@ def calculate_tsne(clip_embeddings):
     tsne_x, tsne_y = tsne_embeddings[:, 0], tsne_embeddings[:, 1]
     return tsne_x, tsne_y
 
-def generate_projection_data(dataset: pandas.DataFrame):
-    if config.RANDOM_SAMPLING:
-        dataset_sample = dataset.sample(n=config.DATASET_SAMPLE_SIZE, random_state=1) if config.DATASET_SAMPLE_SIZE else dataset
-    else:
-        if config.FILTER_NON_NULL_COLUMNS:
-            dataset = dataset.loc[dataset['description'].notnull()]
-            dataset = dataset.loc[dataset['culture'].notnull()]
-            dataset = dataset.loc[dataset['period'].notnull()]
-            dataset = dataset.loc[dataset['type'].notnull()]
-            dataset = dataset.loc[dataset['genre'].notnull()]
-
-        dataset_sample = dataset.head(config.DATASET_SAMPLE_SIZE) if config.DATASET_SAMPLE_SIZE else dataset
-    
+def generate_projection_data(dataset_sample: pandas.DataFrame):  
     print('Calculating clip embeddings')
     clip_embeddings = calculate_clip_embeddings(dataset_sample)
     print('Calculating umap')

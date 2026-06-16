@@ -72,8 +72,23 @@ class Dataset:
         image_info_columns = ('id', 'primary_image', 'additional_images', 'num_additional_images', 'alt_primary_image', 'file_path')
         artworks_columns = ('artwork_id', 'title', 'description', 'culture', 'period', 'dynasty', 'reign', 'type', 'genre', 'style', 'object_date', 'object_begin_date', 'object_end_date', 'location', 'medium', 'dataset_id', 'object_info_id', 'image_info_id',  'reference_date', 'reference_country', 'reference_region', 'preprocessed_description')
 
-        original_data = pandas.DataFrame(db.get_images_with_artwork_info(), columns=image_info_columns + artworks_columns)
-        print(original_data.head(2))
-        # art_dataset_loader.load()
-        feature_engineering.generate_projection_data(original_data)
-        # art_dataset_loader.cleanup()
+        dataset = pandas.DataFrame(db.get_images_with_artwork_info(), columns=image_info_columns + artworks_columns)
+        
+        if config.FILTER_NON_NULL_COLUMNS:
+            dataset = dataset.loc[dataset['description'].notnull()]
+            dataset = dataset.loc[dataset['culture'].notnull()]
+            dataset = dataset.loc[dataset['period'].notnull()]
+            dataset = dataset.loc[dataset['type'].notnull()]
+            dataset = dataset.loc[dataset['genre'].notnull()]
+
+        if config.RANDOM_SAMPLING:
+            dataset_sample = dataset.sample(n=config.DATASET_SAMPLE_SIZE, random_state=1) if config.DATASET_SAMPLE_SIZE else dataset
+        else:
+            dataset_sample = dataset.head(config.DATASET_SAMPLE_SIZE) if config.DATASET_SAMPLE_SIZE else dataset
+
+        images_to_load = list(dataset_sample[['id', 'file_path']].itertuples(index=False, name=None))
+
+        art_dataset_loader.load(images_to_load)
+        feature_engineering.generate_projection_data(dataset_sample)
+
+        #art_dataset_loader.cleanup()

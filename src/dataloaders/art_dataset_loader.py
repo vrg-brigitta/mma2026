@@ -25,7 +25,7 @@ def resize_images(images_dir):
         image.save(image_path)
 
 
-def load():
+def load(images = None):
     if not os.path.isdir(config.DATASET_DIR):
         os.mkdir(config.DATASET_DIR)
     if not os.path.isdir(config.DOWNLOADS_DIR):
@@ -34,11 +34,11 @@ def load():
         print('Sqllite db not found at', DB_FILE_PATH)
 
     # downloading images
-
-    with sqlite3.connect(DB_FILE_PATH) as con:
-        cursor = con.cursor()
-        cursor.execute('SELECT id, file_path FROM Image_Info')
-        images = cursor.fetchall()
+    if images is None:
+        with sqlite3.connect(DB_FILE_PATH) as con:
+            cursor = con.cursor()
+            cursor.execute('SELECT id, file_path FROM Image_Info')
+            images = cursor.fetchall()
 
     for image in tqdm(images, desc='Downloading images'):
         id, file_path = image
@@ -47,7 +47,7 @@ def load():
         if not os.path.isfile(save_path):
             wget.download(file_path, save_path)
 
-        if config.RANDOM_SAMPLING is False and id >= config.DATASET_SAMPLE_SIZE:
+        if config.RANDOM_SAMPLING is False and config.DATASET_SAMPLE_SIZE and id >= config.DATASET_SAMPLE_SIZE:
             break
 
 
