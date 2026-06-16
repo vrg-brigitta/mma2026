@@ -1,0 +1,42 @@
+.explore-results {
+    flex-grow: 0;
+}
+
+.explore-results-grid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 1rem;
+}
+
+.explore-results-item {
+    width: 100%;
+    height: 0;
+    padding-bottom: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.explore-results-item img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+@media (min-width: 600px) {
+    .explore-results-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 900px) {
+    .explore-results-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (min-width: 1200px) {
+    .explore-results-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+@media (min-width: 1500px) {
+    .explore-results-grid { grid-template-columns: repeat(5, 1fr); }
+}
