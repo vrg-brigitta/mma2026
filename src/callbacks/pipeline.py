@@ -29,17 +29,20 @@ def create_clusters():
     print("Clustering done")
 
 
+# Define a sequence of steps that show the progress of the pipeline.
 PIPELINE_STEPS = [
-    {"label": "Loading MET dataset", "fn": load_dataset},
+    {"label": "Loading dataset", "fn": load_dataset},
     {"label": "Resizing images", "fn": preprocess_nxn},
     {"label": "Extract embeddings", "fn": extract_embeddings},
     {"label": "Clustering", "fn": create_clusters},
 ]
 
+# For now we'll keep track of running jobs in memory, but with millions of
+# users this could become a bottleneck, but for now this is fine.
 RUNNING_JOBS = {}
 
 
-def _pipeline_job(job_id):
+def _bg_pipeline_worker(job_id):
     global RUNNING_JOBS
     try:
         for i, step in enumerate(PIPELINE_STEPS):
@@ -55,35 +58,34 @@ def _pipeline_job(job_id):
 
 @callback(
     Output("pipeline-run-store", "data"),
-    Output("visualize-btn", "disabled"),
+    Output("submit-question-btn", "disabled"),
     Output("ui-tick", "disabled"),
-    Input("visualize-btn", "n_clicks"),
+    Input("submit-question-btn", "n_clicks"),
     Input("ui-tick", "n_intervals"),
     State("pipeline-run-store", "data"),
     prevent_initial_call=True
 )
-def pipeline_step(n_clicks, n_intervals, store_data):
+def control_pipeline(n_clicks, n_intervals, store_data):
     trigger = ctx.triggered_id
 
-    if trigger == "visualize-btn":
-        job_id = str(uuid.uuid4())
+    if trigger == "submit-question-btn":
+        if n_clicks is None:
+            raise PreventUpdate
 
+        job_id = uuid.uuid4().hex
         RUNNING_JOBS[job_id] = {
             "current_step": 0,
             "completed": [],
             "status": "running"
         }
+        Thread(target=_bg_pipeline_worker, args=(job_id,), daemon=True).start()
 
-        Thread(target=_pipeline_job, args=(job_id,), daemon=True).start()
-
-        init_store = {
+        return {
             "job_id": job_id,
             "running": True,
             "current_step": 0,
-            "completed": [],
-        }
-
-        return init_store, True, False
+            "completed": []
+        }, True, False
 
     if trigger == "ui-tick":
         if not store_data or not store_data.get("running"):
@@ -95,7 +97,6 @@ def pipeline_step(n_clicks, n_intervals, store_data):
             return store_data, False, True
 
         job_info = RUNNING_JOBS[job_id]
-
         store_data["current_step"] = job_info["current_step"]
         store_data["completed"] = job_info["completed"]
 
@@ -110,37 +111,31 @@ def pipeline_step(n_clicks, n_intervals, store_data):
 
 
 @callback(
-    Output("pipeline-builder-steps", "children"),
+    Output("pipeline-status-container", "children"),
     Input("pipeline-run-store", "data")
 )
-def render_pipeline(store_data):
-    # Don't render anything when no job has been started
+def render_pipeline_status(store_data):
+    # If store is empty or job hasn't started, render nothing.
     if not store_data or "job_id" not in store_data:
         return None
 
-    # Once a job_id exists, extract the progress states
-    current = store_data.get("current_step", 0)
-    completed = set(store_data.get("completed", []))
+    current_step = store_data.get("current_step", 0)
     running = store_data.get("running", False)
 
-    children = []
+    # Only render while the pipeline is actively running.
+    if running:
+        if current_step >= len(PIPELINE_STEPS):
+            return None
 
-    for i, step in enumerate(PIPELINE_STEPS):
-        if i in completed:
-            circle_classnames = "pipeline-circle completed"
-        elif i == current and running:
-            circle_classnames = "pipeline-circle running"
-        else:
-            circle_classnames = "pipeline-circle"
+        current_label = PIPELINE_STEPS[current_step]["label"]
 
-        children.append(
-            html.Div(
-                [
-                    html.Div(className=circle_classnames),
-                    html.Div(step["label"], className="pipeline-label"),
-                ],
-                className="pipeline-step"
-            )
+        return html.Div(
+            [
+                html.Span(className="pipeline-status-spinner"),
+                html.Span(current_label, className="pipeline-status-text")
+            ],
+            className="pipeline-status-inner-container"
         )
 
-    return html.Div(children, className="pipeline-container")
+    # Render nothing when it's done.
+    return None

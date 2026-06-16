@@ -33,7 +33,7 @@ def run_ui():
             dbc.Col(scatterplot_widget, width=8, className='main-col'),
             dbc.Col(right_tab, width=4, className='main-col')
         ], justify='between', className='main-row'),
-    ], fluid=True, id='container')
+    ], fluid=True, id='container', className='app-container')
 
     app.run(debug=True, use_reloader=False)
 

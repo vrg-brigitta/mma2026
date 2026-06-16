@@ -13,21 +13,26 @@ def create_explore_tab_widget():
                 style={"width": "100%", "height": 100},
             ),
 
-            html.Button(
-                "Visualize",
-                id="visualize-btn",
-                className="btn btn-primary",
-                disabled=False
+            dbc.Stack([
+                html.Button(
+                    "Submit",
+                    id="submit-question-btn",
+                    className="btn btn-primary mt-2",
+                    disabled=False
+                ),
+
+                html.Div(id="pipeline-status-container", className="mt-2"),
+            ],
+                direction="horizontal",
+                gap=2,
             ),
 
             dcc.Interval(
                 id="ui-tick",
                 interval=1000,
                 n_intervals=0,
-                disabled=True,
+                disabled=True
             ),
-
-            html.Div(id="pipeline-builder-steps"),
 
             dcc.Store(
                 id="pipeline-run-store",
