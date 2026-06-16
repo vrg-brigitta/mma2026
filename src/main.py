@@ -9,12 +9,12 @@ from src.dataloaders.art_dataset_loader import DB_FILE_PATH
 from dash import Dash, html, dcc
 from src import config
 from src.Dataset import Dataset
-from src.widgets import scatterplot, pipeline
+from src.widgets import scatterplot, explore
 import dash_bootstrap_components as dbc
 
 # need to import callbacks to register them, even if they are not used directly in this file
 import callbacks.scatterplot
-import callbacks.pipeline_builder
+import callbacks.pipeline
 
 def run_ui():
     external_stylesheets = [dbc.themes.BOOTSTRAP]
@@ -22,10 +22,10 @@ def run_ui():
 
     scatterplot_widget = scatterplot.create_scatterplot(config.DEFAULT_PROJECTION)
 
-    pipeline_tab_widget = pipeline.create_pipeline_tab_widget()
+    explore_tab_widget = explore.create_explore_tab_widget()
 
     right_tab = dcc.Tabs([
-        dcc.Tab(label='Pipeline', children=pipeline_tab_widget),
+        dcc.Tab(label='Explore', children=explore_tab_widget),
     ])
 
     app.layout = dbc.Container([
