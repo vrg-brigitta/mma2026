@@ -42,7 +42,7 @@ PIPELINE_STEPS = [
 RUNNING_JOBS = {}
 
 
-def _bg_pipeline_worker(job_id):
+def _pipeline_job(job_id):
     global RUNNING_JOBS
     try:
         for i, step in enumerate(PIPELINE_STEPS):
@@ -65,7 +65,7 @@ def _bg_pipeline_worker(job_id):
     State("pipeline-run-store", "data"),
     prevent_initial_call=True
 )
-def control_pipeline(n_clicks, n_intervals, store_data):
+def pipeline_step(n_clicks, n_intervals, store_data):
     trigger = ctx.triggered_id
 
     if trigger == "submit-question-btn":
@@ -78,7 +78,7 @@ def control_pipeline(n_clicks, n_intervals, store_data):
             "completed": [],
             "status": "running"
         }
-        Thread(target=_bg_pipeline_worker, args=(job_id,), daemon=True).start()
+        Thread(target=_pipeline_job, args=(job_id,), daemon=True).start()
 
         return {
             "job_id": job_id,
