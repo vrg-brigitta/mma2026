@@ -12,12 +12,6 @@ def create_explore_tab_widget():
                 placeholder="Show me all images of cats",
                 style={"width": "100%", "height": 100},
             ),
-            html.Button(
-                "Start generation",
-                id="submit-question-btn",
-                className="btn btn-outline-primary mt-2",
-                disabled=True,
-            ),
 
             html.Button(
                 "Visualize",
@@ -28,14 +22,16 @@ def create_explore_tab_widget():
 
             dcc.Interval(
                 id="ui-tick",
-                interval=200,
-                n_intervals=0
+                interval=1000,
+                n_intervals=0,
+                disabled=True,
             ),
 
             html.Div(id="pipeline-builder-steps"),
 
             dcc.Store(
-                id="dummy-store"
-            )
+                id="pipeline-run-store",
+                data={}
+            ),
         ]),
     ], className="sidebar-container border-widget")

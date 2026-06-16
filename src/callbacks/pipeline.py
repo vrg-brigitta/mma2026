@@ -1,11 +1,8 @@
-from dash import Dash, html, dcc, Input, Output, State, callback
-import dash_bootstrap_components as dbc
+from dash import callback, Input, Output, State, ctx, html
+from dash.exceptions import PreventUpdate
 from threading import Thread
+import uuid
 import time
-
-# =========================
-# PIPELINE STEPS
-# =========================
 
 
 def load_dataset():
@@ -39,67 +36,107 @@ PIPELINE_STEPS = [
     {"label": "Clustering", "fn": create_clusters},
 ]
 
-PIPELINE_STATE = {
-    "running": False,
-    "current_step": -1,
-    "completed": []
-}
+RUNNING_JOBS = {}
 
 
-def run_pipeline():
-    global PIPELINE_STATE
+def _pipeline_job(job_id):
+    global RUNNING_JOBS
+    try:
+        for i, step in enumerate(PIPELINE_STEPS):
+            RUNNING_JOBS[job_id]["current_step"] = i
+            step["fn"]()
+            RUNNING_JOBS[job_id]["completed"].append(i)
 
-    PIPELINE_STATE["running"] = True
-    PIPELINE_STATE["current_step"] = 0
-    PIPELINE_STATE["completed"] = []
-
-    for i, step in enumerate(PIPELINE_STEPS):
-        PIPELINE_STATE["current_step"] = i
-        step["fn"]()
-        PIPELINE_STATE["completed"].append(i)
-
-    PIPELINE_STATE["running"] = False
-    PIPELINE_STATE["current_step"] = len(PIPELINE_STEPS)
-
-    print("done")
+        RUNNING_JOBS[job_id]["status"] = "finished"
+    except Exception as e:
+        RUNNING_JOBS[job_id]["status"] = "failed"
+        print(f"Job {job_id} encountered an error: {e}")
 
 
 @callback(
+    Output("pipeline-run-store", "data"),
     Output("visualize-btn", "disabled"),
+    Output("ui-tick", "disabled"),
     Input("visualize-btn", "n_clicks"),
+    Input("ui-tick", "n_intervals"),
+    State("pipeline-run-store", "data"),
     prevent_initial_call=True
 )
-def start(_):
-    Thread(target=run_pipeline, daemon=True).start()
-    return True
+def pipeline_step(n_clicks, n_intervals, store_data):
+    trigger = ctx.triggered_id
+
+    if trigger == "visualize-btn":
+        job_id = str(uuid.uuid4())
+
+        RUNNING_JOBS[job_id] = {
+            "current_step": 0,
+            "completed": [],
+            "status": "running"
+        }
+
+        Thread(target=_pipeline_job, args=(job_id,), daemon=True).start()
+
+        init_store = {
+            "job_id": job_id,
+            "running": True,
+            "current_step": 0,
+            "completed": [],
+        }
+
+        return init_store, True, False
+
+    if trigger == "ui-tick":
+        if not store_data or not store_data.get("running"):
+            return store_data, False, True
+
+        job_id = store_data.get("job_id")
+        if not job_id or job_id not in RUNNING_JOBS:
+            store_data["running"] = False
+            return store_data, False, True
+
+        job_info = RUNNING_JOBS[job_id]
+
+        store_data["current_step"] = job_info["current_step"]
+        store_data["completed"] = job_info["completed"]
+
+        if job_info["status"] in ["finished", "failed"]:
+            store_data["running"] = False
+            del RUNNING_JOBS[job_id]
+            return store_data, False, True
+
+        return store_data, True, False
+
+    raise PreventUpdate
 
 
 @callback(
     Output("pipeline-builder-steps", "children"),
-    Input("ui-tick", "n_intervals")
+    Input("pipeline-run-store", "data")
 )
-def render(_):
+def render_pipeline(store_data):
+    # Don't render anything when no job has been started
+    if not store_data or "job_id" not in store_data:
+        return None
 
-    state = PIPELINE_STATE
-
-    current = state["current_step"]
-    completed = set(state["completed"])
+    # Once a job_id exists, extract the progress states
+    current = store_data.get("current_step", 0)
+    completed = set(store_data.get("completed", []))
+    running = store_data.get("running", False)
 
     children = []
 
     for i, step in enumerate(PIPELINE_STEPS):
-
         if i in completed:
-            cls = "pipeline-circle completed"
-        elif i == current:
-            cls = "pipeline-circle running"
+            circle_classnames = "pipeline-circle completed"
+        elif i == current and running:
+            circle_classnames = "pipeline-circle running"
         else:
-            cls = "pipeline-circle"
+            circle_classnames = "pipeline-circle"
 
         children.append(
             html.Div(
                 [
-                    html.Div(className=cls),
+                    html.Div(className=circle_classnames),
                     html.Div(step["label"], className="pipeline-label"),
                 ],
                 className="pipeline-step"

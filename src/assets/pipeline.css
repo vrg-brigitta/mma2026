@@ -23,9 +23,17 @@
     top: 5px;
 }
 
-.pipeline-circle.running {
-    animation: pulse 1s infinite;
-    border-color: orange;
+.pipeline-circle.running::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 14px;
+    height: 14px;
+    background: #4a90e2;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    animation: pulse 1.2s ease-in-out infinite;
 }
 
 .pipeline-circle.completed {
@@ -33,9 +41,9 @@
 }
 
 @keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.3); }
-    100% { transform: scale(1); }
+    0% { transform: translate(-50%, -50%) scale(1); }
+    50% { transform: translate(-50%, -50%) scale(0.3); }
+    100% { transform: translate(-50%, -50%) scale(1); }
 }
 
 /* Vertical line */
