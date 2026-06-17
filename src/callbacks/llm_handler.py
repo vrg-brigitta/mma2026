@@ -17,7 +17,8 @@ class LLMHandler:
     """
 
     MODEL_NAME = "mistralai/Ministral-8B-Instruct-2410"
-    METADATA_FIELDS = ('culture', 'period', 'type', 'genre', 'description', 'clip_description')
+    METADATA_FIELDS = ('culture', 'period', 'type', 'genre',
+                       'description', 'clip_description')
 
     def __init__(self, model_name=None):
         self.model_name = model_name or LLMHandler.MODEL_NAME
@@ -35,7 +36,7 @@ class LLMHandler:
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
         self.model = AutoModelForCausalLM.from_pretrained(
             self.model_name,
-            torch_dtype=torch.float16 if self.device == 'cuda' else torch.float32,
+            dtype=torch.float16 if self.device == 'cuda' else torch.float32,
         ).to(self.device)
         print('LLM loaded')
 
@@ -55,13 +56,13 @@ class LLMHandler:
 
         with torch.no_grad():
             output = self.model.generate(
-                inputs,
+                **inputs,
                 max_new_tokens=max_new_tokens,
                 do_sample=False,
                 pad_token_id=self.tokenizer.eos_token_id,
             )
 
-        generated = output[0][inputs.shape[-1]:]
+        generated = output[0][inputs["input_ids"].shape[-1]:]
         return self.tokenizer.decode(generated, skip_special_tokens=True)
 
     @staticmethod
@@ -137,10 +138,9 @@ class LLMHandler:
             raw = self._generate(self._search_system_prompt(), user_query)
         return LLMHandler._parse_json(raw)
 
-
     def _describe_system_prompt(self):
         return (
-           """<task>
+            """<task>
             Describe one cluster of artworks. Identify which cultures, periods, types, and genres dominate, and note anything notable.
 
             <fields>
