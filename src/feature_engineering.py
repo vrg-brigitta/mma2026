@@ -1,4 +1,7 @@
 import os
+
+# This is needed to prevent numba from using multiple threads, which can cause
+# issues on macOS. It is crucial to place it before all the other imports.
 os.environ["NUMBA_NUM_THREADS"] = "1"
 
 import json
@@ -16,18 +19,9 @@ from sklearn.manifold import TSNE
 
 from src import config
 
-EMBEDDINGS_PATH = os.path.join(config.DATA_DIR, 'embeddings.npy')
-IDS_PATH = os.path.join(config.DATA_DIR, 'ids.json')
-UMAP_REDUCER_PATH = os.path.join(config.DATA_DIR, 'umap_reducer.pkl')
-DB_PATH = os.path.join(config.DOWNLOADS_DIR, 'vagen_database_MMA.db')
-
-CLIP_MODEL = 'ViT-L/14'
-BATCH_SIZE = 256
-DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
-
 
 def load_metadata():
-    con = sqlite3.connect(DB_PATH)
+    con = sqlite3.connect(config.DB_PATH)
     df = pd.read_sql("""
         SELECT
             a.id AS id,
@@ -65,14 +59,14 @@ def load_metadata():
 
 
 def calculate_clip_embeddings(df):
-    model, preprocess = clip.load(CLIP_MODEL, device=DEVICE)
+    model, preprocess = clip.load(config.CLIP_MODEL, device=config.DEVICE)
     model.eval()
 
     all_embeddings = []
     ids = list(df.index)
 
-    for i in tqdm(range(0, len(ids), BATCH_SIZE), desc='CLIP'):
-        batch_ids = ids[i:i + BATCH_SIZE]
+    for i in tqdm(range(0, len(ids), config.CLIP_EMBEDS_BATCH_SIZE), desc='CLIP'):
+        batch_ids = ids[i:i + config.CLIP_EMBEDS_BATCH_SIZE]
         imgs = []
         valid_ids = []
         for artwork_id in batch_ids:
@@ -86,7 +80,7 @@ def calculate_clip_embeddings(df):
         if not imgs:
             continue
 
-        batch = torch.stack(imgs).to(DEVICE)
+        batch = torch.stack(imgs).to(config.DEVICE)
         with torch.no_grad():
             feats = model.encode_image(batch)
             feats = F.normalize(feats, dim=-1).float().cpu().numpy()
@@ -125,17 +119,17 @@ def generate_projection_data(original_data=None):
     else:
         df = df.head(config.DATASET_SAMPLE_SIZE) if config.DATASET_SAMPLE_SIZE else df
 
-    print(f'Processing {len(df)} artworks on {DEVICE} with {CLIP_MODEL}')
+    print(f'Processing {len(df)} artworks on {config.DEVICE} with {config.CLIP_MODEL}')
 
     kept_ids, embeddings = calculate_clip_embeddings(df)
     df = df.loc[kept_ids]
 
-    np.save(EMBEDDINGS_PATH, embeddings)
-    with open(IDS_PATH, 'w') as f:
+    np.save(config.EMBEDDINGS_PATH, embeddings)
+    with open(config.IDS_PATH, 'w') as f:
         json.dump([int(x) for x in kept_ids], f)
 
     umap_x, umap_y, reducer = calculate_umap(embeddings)
-    joblib.dump(reducer, UMAP_REDUCER_PATH)
+    joblib.dump(reducer, config.UMAP_REDUCER_PATH)
 
     tsne_x, tsne_y = calculate_tsne(embeddings)
 

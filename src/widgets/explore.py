@@ -9,13 +9,14 @@ def create_explore_tab_widget():
             html.H5("Ask a question"),
             dash.dcc.Textarea(
                 id="question-input",
-                placeholder="Show me all images of cats",
-                style={"width": "100%", "height": 100},
+                placeholder="An old Japanese woodblock print of waves",
+                className="question-input",
+                value="An old Japanese woodblock print of waves"
             ),
 
             dbc.Stack([
                 html.Button(
-                    "Submit",
+                    html.Span("Submit", id="submit-btn-label"),
                     id="submit-question-btn",
                     className="btn btn-primary mt-2",
                 ),
@@ -30,10 +31,11 @@ def create_explore_tab_widget():
                 disabled=True
             ),
 
-            dcc.Store(
-                id="pipeline-run-store",
-                data={}
-            ),
+            dcc.Store(id="search-trigger-store"),
+            dcc.Store(id="load-more-trigger-store"),
+            dcc.Store(id="search-state-store", data={"all_ids": [], "offset": 0}),
+            
+            dcc.Store(id="pipeline-run-store", data={}),
 
             html.Hr(),
 
@@ -47,22 +49,26 @@ def create_explore_tab_widget():
                         className="btn btn-outline-primary",
                     ),
                 ], direction="horizontal", gap=2),
-            ], direction="vertical", className="explore-results"),
+            ], direction="vertical", className="describe-results sidebar-group"),
 
             html.Hr(),
 
             dbc.Stack([
                 html.H5("Results"),
-                html.P("Found 9318 images that may depict grief. Among these, 7882 (84.6%) are related to Asian cultures."),
+                html.P("Ask a question or describe the data you're interested in.", id="results-summary"),
+                html.Div(
+                    dcc.Loading(children=dbc.Stack(id="explore-results-grid", className="explore-results-grid")),
+                    className="explore-results-inner-container"
+                ),
                 dbc.Stack([
-                    html.Div(html.Img(src="https://picsum.photos/200/300"), className="explore-results-item"),
-                    html.Div(html.Img(src="https://picsum.photos/200/300"), className="explore-results-item"),
-                    html.Div(html.Img(src="https://picsum.photos/200/300"), className="explore-results-item"),
-                    html.Div(html.Img(src="https://picsum.photos/200/300"), className="explore-results-item"),
-                    html.Div(html.Img(src="https://picsum.photos/200/300"), className="explore-results-item"),
-                    html.Div(html.Img(src="https://picsum.photos/200/300"), className="explore-results-item"),
-                ], className="explore-results-grid")
-            ], direction="vertical", className="explore-results"),
-
+                    html.Button(
+                        "Load more results", 
+                        id="load-more-btn",
+                        className="btn btn-outline-secondary mt-2",
+                        style={"display": "none"}
+                    ),
+                ], direction="horizontal", gap=2, className="load-more-btn-container"),
+            ], direction="vertical", className="explore-results-container sidebar-group"),
+            html.Div(id="scroll-dummy", style={"display": "none"}),
         ]),
     ], className="sidebar-container border-widget")

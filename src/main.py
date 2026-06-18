@@ -11,10 +11,13 @@ from src import config
 from src.Dataset import Dataset
 from src.widgets import scatterplot, explore
 import dash_bootstrap_components as dbc
+from src.llm_handlers.query_handler import query_handler
+from src.llm_handlers.clip_handler import clip_handler
 
 # need to import callbacks to register them, even if they are not used directly in this file
 import callbacks.scatterplot
 import callbacks.pipeline
+import callbacks.search
 
 def run_ui():
     external_stylesheets = [dbc.themes.BOOTSTRAP]

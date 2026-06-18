@@ -92,3 +92,11 @@ class Dataset:
         feature_engineering.generate_projection_data(dataset_sample)
 
         #art_dataset_loader.cleanup()
+
+    @staticmethod
+    def get_image_url(artwork_id):
+        try:
+            artwork_id = int(artwork_id)
+            return Dataset.data.loc[artwork_id, "file_path"]
+        except (KeyError, ValueError, TypeError):
+            return None
