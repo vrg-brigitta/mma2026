@@ -1,4 +1,5 @@
-from dash import callback, Input, Output, State, html, clientside_callback
+import dash
+from dash import callback, Input, Output, State, html, clientside_callback, ALL
 from dash.exceptions import PreventUpdate
 
 from src.llm_handlers.query_handler import query_handler
@@ -91,7 +92,16 @@ def run_initial_search(user_query, store_data):
 
     top_ids = ids[:10]
     images = [
-        html.Div(html.Img(src=Dataset.get_image_url(artwork_id)), className="explore-results-item")
+        html.Div(
+            html.Img(
+                src=Dataset.get_image_url(artwork_id),
+                # Use a dictionary ID for pattern-matching
+                id={"type": "thumb-img", "index": artwork_id},
+                n_clicks=0,
+                style={"cursor": "pointer", "width": "100%"} # Pointer cursor indicates interactivity
+            ),
+            className="explore-results-item"
+        )
         for artwork_id in top_ids
     ]
 
@@ -151,7 +161,16 @@ def load_more_results(current_images, current_state, trigger_data):
     next_batch_ids = all_ids[current_offset:next_offset]
 
     new_images = [
-        html.Div(html.Img(src=Dataset.get_image_url(artwork_id)), className="explore-results-item")
+        html.Div(
+            html.Img(
+                src=Dataset.get_image_url(artwork_id),
+                # Use a dictionary ID for pattern-matching
+                id={"type": "thumb-img", "index": artwork_id},
+                n_clicks=0,
+                style={"cursor": "pointer", "width": "100%"} # Pointer cursor indicates interactivity
+            ),
+            className="explore-results-item"
+        )
         for artwork_id in next_batch_ids
     ]
 
@@ -173,6 +192,35 @@ def load_more_results(current_images, current_state, trigger_data):
         updated_grid, current_state, load_more_style,
         btn_disabled, "Load more results", summary
     )
+
+
+@callback(
+    Output("image-preview-modal", "is_open"),
+    Output("modal-preview-img", "src"),
+    Input({"type": "thumb-img", "index": ALL}, "n_clicks"),
+    State("image-preview-modal", "is_open"),
+    prevent_initial_call=True
+)
+def toggle_image_lightbox(thumb_clicks, is_open):
+    ctx = dash.callback_context
+
+    if not ctx.triggered:
+        raise PreventUpdate
+
+    trigger = ctx.triggered[0]
+    trigger_id = ctx.triggered_id
+
+    if isinstance(trigger_id, dict) and trigger_id.get("type") == "thumb-img":
+        if trigger.get("value") is None or trigger.get("value") == 0:
+            raise PreventUpdate
+
+        artwork_id = trigger_id["index"]
+        large_img_url = Dataset.get_image_url(artwork_id)
+
+        return True, large_img_url
+
+    return False, dash.no_update
+
 
 # Scroll down after loading more results
 clientside_callback(

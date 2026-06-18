@@ -18,6 +18,7 @@ def create_explore_tab_widget():
                     html.Span("Submit", id="submit-btn-label"),
                     id="submit-question-btn",
                     className="btn btn-primary mt-2",
+                    disabled=True,
                 ),
 
                 html.Div(id="pipeline-status-container", className="mt-2"),
@@ -68,4 +69,14 @@ def create_explore_tab_widget():
             ], direction="vertical", className="explore-results-container sidebar-group"),
             html.Div(id="scroll-dummy", style={"display": "none"}),
         ]),
+
+        # Model for image preview
+        dbc.Modal([
+            dbc.ModalHeader(dbc.ModalTitle("Image Preview"), close_button=True),
+            dbc.ModalBody(
+                html.Div([
+                    html.Img(id="modal-preview-img")
+                ], className="text-center")
+            ),
+        ], id="image-preview-modal", className="image-preview-modal", size="xl", centered=True)
     ], className="sidebar-container border-widget")

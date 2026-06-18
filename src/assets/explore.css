@@ -44,6 +44,12 @@
     padding-bottom: 100%;
     position: relative;
     overflow: hidden;
+    transition: transform 0.2s ease;
+}
+
+.explore-results-item:hover {
+    transform: scale(0.95);
+    cursor: pointer;
 }
 
 .explore-results-item img {
@@ -59,6 +65,11 @@
     width: 100%;
     min-height: 60px;
     max-height: 60px;
+}
+
+.image-preview-modal img {
+    width: 100%;
+    height: auto;
 }
 
 @media (min-width: 600px) {
