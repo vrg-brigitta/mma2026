@@ -194,6 +194,10 @@ def load_more_results(current_images, current_state, trigger_data):
     )
 
 
+# ==========================================
+# Image preview modal
+# ==========================================
+
 @callback(
     Output("image-preview-modal", "is_open"),
     Output("modal-preview-img", "src"),
@@ -221,8 +225,10 @@ def toggle_image_lightbox(thumb_clicks, is_open):
 
     return False, dash.no_update
 
-
+# ==========================================
 # Scroll down after loading more results
+# ==========================================
+
 clientside_callback(
     """
     function(grid_children, current_state) {
