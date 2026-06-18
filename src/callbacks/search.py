@@ -12,12 +12,33 @@ from src.Dataset import Dataset
 
 @callback(
     Output("submit-question-btn", "disabled", allow_duplicate=True),
+    Input("question-input", "value"),
+    State("submit-btn-label", "children"),
+    prevent_initial_call=True,
+)
+def toggle_submit_disabled(value, current_label):
+    """
+    Disable the submit button if the input is empty.
+    """
+    if current_label == "Searching...":
+        raise PreventUpdate
+
+    is_empty = not value or not value.strip()
+    return is_empty
+
+
+@callback(
+    Output("submit-question-btn", "disabled", allow_duplicate=True),
     Output("submit-btn-label", "children", allow_duplicate=True),
     Output("search-trigger-store", "data"),
     Input("submit-question-btn", "n_clicks"),
     prevent_initial_call=True,
 )
 def set_search_loading_state(n_clicks):
+    """
+    When the user clicks the submit button, we set it to a loading state and
+    trigger the search.
+    """
     if not n_clicks:
         raise PreventUpdate
     return True, "Searching...", n_clicks
@@ -37,6 +58,10 @@ def set_search_loading_state(n_clicks):
     prevent_initial_call=True,
 )
 def run_initial_search(user_query, store_data):
+    """
+    When the search trigger store is updated (by clicking the submit button),
+    we run the search and update the results grid.
+    """
     if not store_data or not user_query or not user_query.strip():
         raise PreventUpdate
 
@@ -94,6 +119,10 @@ def run_initial_search(user_query, store_data):
     prevent_initial_call=True,
 )
 def set_load_more_loading(n_clicks):
+    """
+    When the user clicks the "Load more results" button, we set it to a loading
+    state and trigger the loading of more results.
+    """
     if not n_clicks:
         raise PreventUpdate
     return True, "Loading...", n_clicks
@@ -144,7 +173,6 @@ def load_more_results(current_images, current_state, trigger_data):
         updated_grid, current_state, load_more_style,
         btn_disabled, "Load more results", summary
     )
-
 
 # Scroll down after loading more results
 clientside_callback(

@@ -11,7 +11,6 @@ def create_explore_tab_widget():
                 id="question-input",
                 placeholder="An old Japanese woodblock print of waves",
                 className="question-input",
-                value="An old Japanese woodblock print of waves"
             ),
 
             dbc.Stack([
@@ -34,8 +33,6 @@ def create_explore_tab_widget():
             dcc.Store(id="search-trigger-store"),
             dcc.Store(id="load-more-trigger-store"),
             dcc.Store(id="search-state-store", data={"all_ids": [], "offset": 0}),
-            
-            dcc.Store(id="pipeline-run-store", data={}),
 
             html.Hr(),
 
@@ -62,7 +59,7 @@ def create_explore_tab_widget():
                 ),
                 dbc.Stack([
                     html.Button(
-                        "Load more results", 
+                        "Load more results",
                         id="load-more-btn",
                         className="btn btn-outline-secondary mt-2",
                         style={"display": "none"}
