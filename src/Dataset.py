@@ -53,12 +53,12 @@ class DataBase:
             FROM Artworks a
             JOIN Image_Info i ON i.id = a.image_info_id
             WHERE i.file_path IS NOT NULL""" 
-            + """ AND a.culture IS NOT NULL
+            + (""" AND a.culture IS NOT NULL
                 AND a.period IS NOT NULL
                 AND a.type IS NOT NULL
                 AND a.genre IS NOT NULL
                 AND a.description IS NOT NULL
-              """ if config.FILTER_NON_NULL_COLUMNS else "", 
+              """ if config.FILTER_NON_NULL_COLUMNS else ""), 
             self.con)
         
         return df
