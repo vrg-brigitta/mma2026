@@ -85,4 +85,3 @@ class CLIPHandler:
 
 clip_handler = CLIPHandler()
 clip_handler.load_model()
-clip_handler.load_embeddings()

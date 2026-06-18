@@ -1,15 +1,15 @@
 import sqlite3
 import os
+import time
 
 import pandas
 
 from src import config, feature_engineering
 from src.dataloaders import art_dataset_loader
-from src.dataloaders.art_dataset_loader import DB_FILE_PATH
 
 class DataBase:
     def __init__(self) -> None:
-        self.sql_file = DB_FILE_PATH
+        self.sql_file = config.DB_PATH
 
     @staticmethod
     def connect_to_db(func):
@@ -21,15 +21,47 @@ class DataBase:
     
     @connect_to_db
     def get_all(self, tb_name) -> list:
-        cur = self.con.cursor()
-        cur.execute('SELECT * FROM {};'.format(tb_name))
-        return cur.fetchall()
+        df = pandas.read_sql('SELECT * FROM {};'.format(tb_name), self.con)
+        return df
     
     @connect_to_db
-    def get_images_with_artwork_info(self) -> list:
-        cur = self.con.cursor()
-        cur.execute('SELECT * FROM Image_Info LEFT JOIN Artworks ON Image_Info.id = Artworks.image_info_id;')
-        return cur.fetchall()
+    def get_artworks_with_imageinfo(self) -> pandas.DataFrame:
+        df = pandas.read_sql("""
+            SELECT
+                a.id AS id,
+                i.file_path,
+                i.primary_image,
+                i.alt_primary_image,
+                a.title,
+                a.description,
+                a.culture,
+                a.period,
+                a.dynasty,
+                a.reign,
+                a.type,
+                a.genre,
+                a.style,
+                a.object_date,
+                a.object_begin_date,
+                a.object_end_date,
+                a.location,
+                a.medium,
+                a.reference_date,
+                a.reference_country,
+                a.reference_region,
+                a.preprocessed_description
+            FROM Artworks a
+            JOIN Image_Info i ON i.id = a.image_info_id
+            WHERE i.file_path IS NOT NULL""" 
+            + """ AND a.culture IS NOT NULL
+                AND a.period IS NOT NULL
+                AND a.type IS NOT NULL
+                AND a.genre IS NOT NULL
+                AND a.description IS NOT NULL
+              """ if config.FILTER_NON_NULL_COLUMNS else "", 
+            self.con)
+        
+        return df
 
 
 class Dataset:
@@ -64,32 +96,22 @@ class Dataset:
 
     @staticmethod
     def files_exist():
-        return os.path.isfile(DB_FILE_PATH) and os.path.isdir(config.IMAGES_DIR) and os.path.isfile(config.AUGMENTED_DATASET_PATH)
+        return os.path.isfile(config.DB_PATH) and os.path.isdir(config.IMAGES_DIR) and os.path.isfile(config.AUGMENTED_DATASET_PATH)
 
     @staticmethod
     def download():
         db = DataBase()
-        image_info_columns = ('id', 'primary_image', 'additional_images', 'num_additional_images', 'alt_primary_image', 'file_path')
-        artworks_columns = ('artwork_id', 'title', 'description', 'culture', 'period', 'dynasty', 'reign', 'type', 'genre', 'style', 'object_date', 'object_begin_date', 'object_end_date', 'location', 'medium', 'dataset_id', 'object_info_id', 'image_info_id',  'reference_date', 'reference_country', 'reference_region', 'preprocessed_description')
-
-        dataset = pandas.DataFrame(db.get_images_with_artwork_info(), columns=image_info_columns + artworks_columns)
-        
-        if config.FILTER_NON_NULL_COLUMNS:
-            dataset = dataset.loc[dataset['description'].notnull()]
-            dataset = dataset.loc[dataset['culture'].notnull()]
-            dataset = dataset.loc[dataset['period'].notnull()]
-            dataset = dataset.loc[dataset['type'].notnull()]
-            dataset = dataset.loc[dataset['genre'].notnull()]
+        df = db.get_artworks_with_imageinfo()
 
         if config.RANDOM_SAMPLING:
-            dataset_sample = dataset.sample(n=config.DATASET_SAMPLE_SIZE, random_state=1) if config.DATASET_SAMPLE_SIZE else dataset
+            df = df.sample(n=config.DATASET_SAMPLE_SIZE, random_state=1) if config.DATASET_SAMPLE_SIZE else df
         else:
-            dataset_sample = dataset.head(config.DATASET_SAMPLE_SIZE) if config.DATASET_SAMPLE_SIZE else dataset
+            df = df.head(config.DATASET_SAMPLE_SIZE) if config.DATASET_SAMPLE_SIZE else df
 
-        images_to_load = list(dataset_sample[['id', 'file_path']].itertuples(index=False, name=None))
+        images_to_load = list(df[['id', 'file_path']].itertuples(index=False, name=None))
 
         art_dataset_loader.load(images_to_load)
-        feature_engineering.generate_projection_data(dataset_sample)
+        feature_engineering.generate_projection_data(df)
 
         #art_dataset_loader.cleanup()
 

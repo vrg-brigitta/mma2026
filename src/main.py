@@ -4,8 +4,6 @@ from pathlib import Path
 # Add parent directory to path to allow importing src module
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.dataloaders.art_dataset_loader import DB_FILE_PATH
-
 from dash import Dash, html, dcc
 from src import config
 from src.Dataset import Dataset
@@ -45,9 +43,9 @@ def main():
     if not Dataset.files_exist():
         print('Missing one of the following dataset paths:')
         print('-', config.AUGMENTED_DATASET_PATH)
-        print('-', DB_FILE_PATH)
+        print('-', config.DB_PATH)
         print('-', config.IMAGES_DIR)
-        print('Creating dataset.')
+        print('Creating augmented dataset.')
         Dataset.download()
 
     Dataset.load()
@@ -56,6 +54,9 @@ def main():
         print('Sample size changed in the configuration. Recalculating features.')
         Dataset.download()
         Dataset.load()
+
+    
+    clip_handler.load_embeddings()
 
     print('Starting Dash')
     run_ui()

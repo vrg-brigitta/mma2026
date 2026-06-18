@@ -14,7 +14,6 @@ from tqdm import tqdm
 
 from src import config
 
-DB_FILE_PATH = os.path.join(config.DOWNLOADS_DIR, 'vagen_database_MMA.db')
 IMAGES_SIZE = (120, 120)
 
 def resize_images(images_dir):
@@ -30,12 +29,12 @@ def load(images = None):
         os.mkdir(config.DATASET_DIR)
     if not os.path.isdir(config.DOWNLOADS_DIR):
         os.mkdir(config.DOWNLOADS_DIR)
-    if not os.path.isfile(DB_FILE_PATH):
-        print('Sqllite db not found at', DB_FILE_PATH)
+    if not os.path.isfile(config.DB_PATH):
+        print('Sqllite db not found at', config.DB_PATH)
 
     # downloading images
     if images is None:
-        with sqlite3.connect(DB_FILE_PATH) as con:
+        with sqlite3.connect(config.DB_PATH) as con:
             cursor = con.cursor()
             cursor.execute('SELECT id, file_path FROM Image_Info')
             images = cursor.fetchall()

@@ -5,10 +5,8 @@ import os
 os.environ["NUMBA_NUM_THREADS"] = "1"
 
 import json
-import sqlite3
 import joblib
 import numpy as np
-import pandas as pd
 import torch
 import torch.nn.functional as F
 import clip
@@ -18,45 +16,6 @@ from umap import UMAP
 from sklearn.manifold import TSNE
 
 from src import config
-
-
-def load_metadata():
-    con = sqlite3.connect(config.DB_PATH)
-    df = pd.read_sql("""
-        SELECT
-            a.id AS id,
-            i.file_path,
-            a.title,
-            a.description,
-            a.culture,
-            a.period,
-            a.dynasty,
-            a.reign,
-            a.type,
-            a.genre,
-            a.style,
-            a.object_date,
-            a.object_begin_date,
-            a.object_end_date,
-            a.location,
-            a.medium,
-            a.reference_date,
-            a.reference_country,
-            a.reference_region,
-            a.preprocessed_description
-        FROM Artworks a
-        JOIN Image_Info i ON i.id = a.image_info_id
-        WHERE a.culture IS NOT NULL
-          AND a.period IS NOT NULL
-          AND a.type IS NOT NULL
-          AND a.genre IS NOT NULL
-          AND a.description IS NOT NULL
-          AND i.file_path IS NOT NULL
-    """, con)
-    con.close()
-    df = df.set_index('id')
-    return df
-
 
 def calculate_clip_embeddings(df):
     model, preprocess = clip.load(config.CLIP_MODEL, device=config.DEVICE)
@@ -96,7 +55,6 @@ def calculate_clip_embeddings(df):
     embeddings = np.stack([id_to_embed[aid] for aid in kept_ids])
     return kept_ids, embeddings
 
-
 def calculate_umap(embeddings):
     reducer = UMAP(metric='cosine', n_components=2, random_state=42)
     coords = reducer.fit_transform(embeddings)
@@ -109,16 +67,11 @@ def calculate_tsne(embeddings):
     return coords[:, 0], coords[:, 1]
 
 
-def generate_projection_data(original_data=None):
+def generate_projection_data(df=None):
     os.makedirs(config.DATA_DIR, exist_ok=True)
 
-    df = load_metadata()
-
-    if config.RANDOM_SAMPLING:
-        df = df.sample(n=config.DATASET_SAMPLE_SIZE, random_state=1) if config.DATASET_SAMPLE_SIZE else df
-    else:
-        df = df.head(config.DATASET_SAMPLE_SIZE) if config.DATASET_SAMPLE_SIZE else df
-
+    df = df.set_index('id')
+    
     print(f'Processing {len(df)} artworks on {config.DEVICE} with {config.CLIP_MODEL}')
 
     kept_ids, embeddings = calculate_clip_embeddings(df)
