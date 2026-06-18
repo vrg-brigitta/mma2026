@@ -1,18 +1,48 @@
 import os
 
 from PIL import Image
-from dash import dcc
+from dash import dcc, html
 import plotly.express
 from src.Dataset import Dataset
 from src import config
 import plotly.graph_objects as go
+import dash_bootstrap_components as dbc
 
+trace_colors = plotly.express.colors.qualitative.Plotly
 
-def highlight_class_on_scatterplot(scatterplot, genres):
-    if genres:
-        colors = Dataset.get()['genre'].map(lambda x: config.SCATTERPLOT_SELECTED_COLOR if x in genres else config.SCATTERPLOT_COLOR)
+def get_columnNamesFromProjection(projection):
+    if projection == 't-SNE':
+        x_col, y_col = 'tsne_x', 'tsne_y'
+    elif projection == 'UMAP':
+        x_col, y_col = 'umap_x', 'umap_y'
     else:
-        colors = config.SCATTERPLOT_COLOR
+        raise Exception('Projection not found')    
+ 
+    return x_col, y_col
+
+def get_source_from_primary_image(df):
+    return df["primary_image"].str.extract(r'^([^_]+)')[0]
+
+
+def highlight_class_on_scatterplot(scatterplot):
+    dataset = Dataset.get()
+    sources = get_source_from_primary_image(dataset).unique()
+
+    source_colors = dict(zip(sources, trace_colors))
+    
+    source_series = get_source_from_primary_image(dataset)
+    default_colors = source_series.map(source_colors)
+
+    scatterplot_fig_data = scatterplot['data'][0]
+    selected_ids = []
+    if 'selectedpoints' in scatterplot_fig_data:
+        selected_ids = [dataset.index[i] for i in scatterplot_fig_data['selectedpoints']]
+    
+    colors = [
+        config.SCATTERPLOT_SELECTED_COLOR if image_id in selected_ids else default_colors.loc[image_id]
+        for image_id in dataset.index
+    ]
+
     scatterplot['data'][0]['marker'] = {'color': colors}
 
 
@@ -45,8 +75,8 @@ def add_images_to_scatterplot(scatterplot_fig, zoom_data=None):
 
     scatterplot_fig['layout']['images'] = []
 
-    x_col = scatterplot_fig['layout']['xaxis']['title']['text']
-    y_col = scatterplot_fig['layout']['yaxis']['title']['text']
+    # TODO support for multiple projections
+    x_col, y_col = get_columnNamesFromProjection(config.DEFAULT_PROJECTION) 
     dataset = Dataset.get()
 
     images_in_zoom = []
@@ -73,39 +103,78 @@ def add_images_to_scatterplot(scatterplot_fig, zoom_data=None):
         ))
     return scatterplot_fig
 
-
 def create_scatterplot_figure(projection):
-    if projection == 't-SNE':
-        x_col, y_col = 'tsne_x', 'tsne_y'
-    elif projection == 'UMAP':
-        x_col, y_col = 'umap_x', 'umap_y'
-    else:
-        raise Exception('Projection not found')
+    x_col, y_col = get_columnNamesFromProjection(projection)
 
-    fig = plotly.express.scatter(data_frame=Dataset.get(), x=x_col, y=y_col)
+    fig = plotly.express.scatter(data_frame=Dataset.get(), x=x_col, y=y_col,
+        labels=dict(zip((x_col, y_col), ('x', 'y'))))
+
     fig.update_traces(
         customdata=Dataset.get().index, 
         marker={'color': config.SCATTERPLOT_COLOR},
         unselected_marker_opacity=0.60)
+
     fig.update_layout(dragmode='select')
-    fig.update_yaxes(scaleanchor="x", scaleratio=1)
+
+    fig.update_xaxes(title=None, showticklabels=False)
+    fig.update_yaxes(scaleanchor="x", scaleratio=1, title=None, showticklabels=False)
+
     fig.add_trace(
         go.Scatter(
             x=[None],
             y=[None],
             mode="markers",
-            name='image embedding',
-            marker=dict(size=7, color="blue", symbol='circle'),
-        ),
-    )
-    fig.add_trace(
-        go.Scatter(
-            x=[None],
-            y=[None],
-            mode="markers",
-            name='selected class',
+            name='selected',
             marker=dict(size=7, color="red", symbol='circle'),
         ),
+    )
+
+    dataset = Dataset.get()
+    sources = get_source_from_primary_image(dataset).unique()
+    source_colors = dict(zip(sources, trace_colors))
+
+    for source in sources:
+        fig.add_trace(
+            go.Scatter(
+                x=[None],
+                y=[None],
+                mode="markers",
+                name=source,
+                marker=dict(size=7, color=source_colors[source], symbol='circle'),
+            ),
+        )
+
+    source_series = get_source_from_primary_image(dataset)
+    colors = source_series.map(source_colors)
+    fig.data[0].marker.color = colors
+
+    buttons = [
+        dict(
+            label="All",
+            method="update",
+            args=[{"visible": [True] * (len(sources) + 1)}],
+        ) 
+    ]
+
+    for i, source in enumerate(sources):
+        # Create a visibility list where only the current index is True
+        visibility = [False] * (len(sources) + 1)
+        visibility[i+1] = True
+
+        buttons.append(
+            dict(
+                label=f"{source} Only",
+                method="update",
+                args=[{"visible": visibility}],
+            )
+        )
+
+    fig.update_layout(
+        updatemenus=[
+            dict(
+                type="buttons",
+                buttons=buttons,
+        )]
     )
 
     fig.update_layout(legend=dict(
@@ -126,8 +195,11 @@ def create_scatterplot(projection):
             responsive=True,
             config={
                 'displaylogo': False,
-                'modeBarButtonsToRemove': ['autoscale'],
+                'modeBarButtonsToRemove': ['resetScale2d', 'lasso2d', 'toImage'],
                 'displayModeBar': True,
+                'showAxisDragHandles': True,
+                'showTips': True,
+                'scrollZoom': True,
             }
         )
 

@@ -30,14 +30,4 @@ def scatterplot_is_zoomed(scatterplot_fig, zoom_data):
 def scatterplot_is_selected(scatterplot_fig, data_selected):
     print('Scatterplot is selected')
 
-    data_selected = scatterplot.get_data_selected_on_scatterplot(scatterplot_fig)
-
-    group_by_count = (data_selected.groupby(['genre'])['genre']
-                          .agg('count')
-                          .to_frame('count_in_selection')
-                          .reset_index())
-    group_by_count['total_count'] = Dataset.class_count().loc[group_by_count['genre']].values
-    # table_rows = group_by_count.sort_values('count_in_selection', ascending=False).to_dict("records")
-    scatterplot.highlight_class_on_scatterplot(scatterplot_fig, None)
-
-
+    scatterplot.highlight_class_on_scatterplot(scatterplot_fig)
