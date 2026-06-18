@@ -33,8 +33,11 @@
 
 .sidebar-container {
     padding: 20px;
-    overflow-x: hidden;
-    overflow-y: auto;
+    overflow: hidden;
+}
+
+.sidebar-container > .vstack {
+    overflow: hidden;
 }
 
 .agent-buttons {
