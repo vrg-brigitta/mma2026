@@ -51,13 +51,13 @@ def run_describe(n_clicks, selected_indices, relayout_data):
             load_more_style
         )
 
-    summary = result.get("summary", "")
-    summary += f" Described {min(total_points, max_points)} out of {total_points} images."
-
     return (
         html.Div([
-            html.P(summary),
-            html.Ul([html.Li(t) for t in result.get("trends", [])]),
+            html.Div([
+                html.P(result.get("summary", "")),
+                html.Ul([html.Li(t) for t in result.get("trends", [])]),
+            ]),
+            html.P(f" Described {min(total_points, max_points)} out of {total_points} images.")
         ]),
         grid_children,
         load_more_style
