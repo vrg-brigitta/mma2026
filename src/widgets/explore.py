@@ -6,6 +6,9 @@ import dash_bootstrap_components as dbc
 def create_explore_tab_widget():
     return dbc.Stack([
         dbc.Stack([
+            # =============================================
+            # Ask a question
+            # =============================================
             html.H5("Ask a question"),
             dash.dcc.Textarea(
                 id="question-input",
@@ -37,12 +40,15 @@ def create_explore_tab_widget():
 
             html.Hr(),
 
+            # =============================================
+            # Describe
+            # =============================================
             dbc.Stack([
                 html.H5("Describe"),
-                html.P("Click on the button below to describe the data that is visible in the canvas."),
+                html.P("Describe the selected or visible data on the canvas. At most 200 (random) images will be described."),
                 dbc.Stack([
                     html.Button(
-                        "Submit",
+                        "Describe data",
                         id="describe-btn",
                         className="btn btn-outline-primary",
                     ),
@@ -51,9 +57,12 @@ def create_explore_tab_widget():
 
             html.Hr(),
 
+            # =============================================
+            # Results
+            # =============================================
             dbc.Stack([
                 html.H5("Results"),
-                html.P("Ask a question or describe the data you're interested in.", id="results-summary"),
+                html.Div(html.P("Ask a question or describe the data you're interested in."), id="results-summary"),
                 html.Div(
                     dcc.Loading(children=dbc.Stack(id="explore-results-grid", className="explore-results-grid")),
                     className="explore-results-inner-container"
@@ -70,7 +79,9 @@ def create_explore_tab_widget():
             html.Div(id="scroll-dummy", style={"display": "none"}),
         ]),
 
-        # Model for image preview
+        # =============================================
+        # Modal for image preview
+        # =============================================
         dbc.Modal([
             dbc.ModalHeader(dbc.ModalTitle("Image Preview"), close_button=True),
             dbc.ModalBody(

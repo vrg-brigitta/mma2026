@@ -46,12 +46,12 @@ def set_search_loading_state(n_clicks):
 
 
 @callback(
-    Output("explore-results-grid", "children"),
-    Output("results-summary", "children"),
+    Output("explore-results-grid", "children", allow_duplicate=True),
+    Output("results-summary", "children", allow_duplicate=True),
     Output("submit-question-btn", "disabled", allow_duplicate=True),
     Output("submit-btn-label", "children", allow_duplicate=True),
     Output("search-state-store", "data"),
-    Output("load-more-btn", "style"),
+    Output("load-more-btn", "style", allow_duplicate=True),
     Output("load-more-btn", "disabled", allow_duplicate=True),
     Output("load-more-btn", "children", allow_duplicate=True),
     State("question-input", "value"),
@@ -77,7 +77,7 @@ def run_initial_search(user_query, store_data):
     if query is None:
         return (
             html.Div("Could not understand the query.", className="text-danger"),
-            "Could not understand the query.",
+            html.P("Could not understand the query."),
             submit_btn_disabled, submit_btn_label, empty_state, hide_btn, True, "Load more results"
         )
 
@@ -86,7 +86,7 @@ def run_initial_search(user_query, store_data):
     if not ids:
         return (
             html.Div("No results found.", className="text-warning"),
-            "No results found.",
+            html.P("No results found."),
             submit_btn_disabled, submit_btn_label, empty_state, hide_btn, True, "Load more results"
         )
 
@@ -107,7 +107,7 @@ def run_initial_search(user_query, store_data):
 
     has_more = len(ids) > len(images)
     load_more_style = {"display": "block"} if has_more else {"display": "none"}
-    summary = f"Found {len(ids)} images. Displaying top {len(images)} results."
+    summary = html.P(f"Found {len(ids)} images. Displaying top {len(images)} results.")
 
     new_state = {"all_ids": ids, "offset": 10}
 
@@ -183,7 +183,7 @@ def load_more_results(current_images, current_state, trigger_data):
         load_more_style = {"display": "block"}
         btn_disabled = False
 
-    summary = f"Found {len(all_ids)} images. Displaying top {len(updated_grid)} results."
+    summary = html.P(f"Found {len(all_ids)} images. Displaying top {len(updated_grid)} results.")
 
     # Update just the offset pointer for the next cycle
     current_state["offset"] = next_offset
