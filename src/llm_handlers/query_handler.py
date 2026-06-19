@@ -184,37 +184,35 @@ class QueryHandler:
 
     def _describe_system_prompt(self):
         return (
-            """<task>
-            Describe one cluster of artworks. Identify which cultures, periods, types, and genres dominate, and note anything notable.
+        """<task>
+        Describe one cluster of artworks. Start with a general description of the artworks then summarize the key insights for each of the following: culture, period, type, genre; one bullet point each.
 
-            <fields>
-            culture: origin/people (e.g. Japanese, Egyptian)
-            period: era/dynasty (e.g. Edo period, Renaissance)
-            type: object type (e.g. painting, woodblock print)
-            genre: subject/theme (e.g. landscape, portrait)
-            description: standard textual description
-            clip_description: CLIP-generated visual description
-            </fields>
+        <fields>
+        culture: origin/people (e.g. Japanese, Egyptian)
+        period: era/dynasty (e.g. Edo period, Renaissance)
+        type: object type (e.g. painting, woodblock print)
+        genre: subject/theme (e.g. landscape, portrait)
+        description: standard textual description
+        </fields>
 
-            <rules>
-            - Each value has a count = how many artworks have it. Higher count = more dominant.
-            - Example: "culture: Chinese, 100" means 100 artworks are Chinese.
-            - Rank values by count to find what dominates each field.
-            - Use ONLY the given data. Never invent cultures, periods, types, genres, or details.
-            - summary: one plain sentence describing the cluster overall.
-            - trends: short bullet-style strings, most dominant first. Be specific, mention counts where useful.
-            - Output ONLY the JSON object. No other text.
-            </rules>
+        <rules>
+        - Each value has a count = how many artworks have it. Higher count = more dominant, for example: "culture: Chinese, 100" means 100 artworks are Chinese.
+        - Rank values by count to find what dominates each field.
+        - Use ONLY the given data. Never invent cultures, periods, types, genres, or details.
+        - Output ONLY the JSON object. No other text.
+        - summary: A short paragraph describing the artworks
+        - trends: 4 bullet-style strings containing key insights for the culture, period, type and genre (i.e. the number of occurences, which is dominant, and any links to the descriptions)
+        </rules>
 
-            <output>
-            {"summary": "", "trends": []}
-            </output>
+        <output>
+        {"summary": "", "trends": []}
+        </output>
 
-            <example>
-            user: culture: Japanese, 120; culture: Chinese, 30; period: Edo period, 110; type: woodblock print, 130; genre: landscape, 90; genre: portrait, 25
-            output: {"summary": "A predominantly Japanese cluster of Edo-period woodblock prints, mostly landscapes.", "trends": ["Japanese culture dominates (120 vs 30 Chinese)", "Mostly Edo period (110)", "Almost all woodblock prints (130)", "Landscapes outnumber portraits (90 vs 25)"]}
-            </example>
-            </task>"""
+        <example>
+        user: culture: Japanese, 120; culture: Chinese, 30; period: Edo period, 110; type: woodblock print, 130; genre: landscape, 90; genre: portrait, 25; description: "Color woodblock print depicting Mount Fuji at dawn, with stylized waves in the foreground"; description: "Triptych print showing a coastal village under a red sky, ukiyo-e style"; description: "Hand-colored print of a mountain pass with travelers, autumn foliage"
+        output: {"summary": "A predominantly Japanese cluster of Edo-period woodblock prints, mostly landscapes depicting natural scenes like mountains, coastlines, and seasonal foliage in the ukiyo-e style.", "trends": ["Japanese culture dominates (120 vs 30 Chinese)", "Mostly Edo period (110)", "Almost all woodblock prints (130), consistent with descriptions of color and hand-colored prints", "Landscapes outnumber portraits (90 vs 25), reflected in descriptions of mountains, coastlines, and travelers"]}
+        </example>
+        </task>"""
         )
 
     def describe(self, metadata_records):
