@@ -122,10 +122,8 @@ def run_initial_search(user_query, store_data, selected_indices, relayout_data):
         html.Div(
             html.Img(
                 src=Dataset.get_image_url(artwork_id),
-                # Use a dictionary ID for pattern-matching
                 id={"type": "thumb-img", "index": artwork_id},
                 n_clicks=0,
-                style={"cursor": "pointer", "width": "100%"} # Pointer cursor indicates interactivity
             ),
             className="explore-results-item"
         )
@@ -145,13 +143,14 @@ def run_initial_search(user_query, store_data, selected_indices, relayout_data):
 
     if total_results < config.MAX_EXPLORE_RESULTS_IMAGES_PER_PAGE:
         load_more_style = {"display": "none"}
-        summary = html.P(f"Found {total_results} related images out of {num_selected} selected images.")
+        summary = html.P(f"Found {total_results} related images out of {num_selected} selected images with {int(max(scores) * 100)}% confidence.")
     else:
         load_more_style = {"display": "block"}
-        summary = html.P(f"Found {total_results} related images out of {num_selected} selected images. Displaying top {len(top_ids)} results.")
+        summary = html.P(f"Found {total_results} related images out of {num_selected} selected images with {int(max(scores) * 100)}% confidence. Displaying top {len(top_ids)} results.")
 
     new_state = {
         "all_ids": [img_id for img_id, score in filtered_results],
+        "all_scores": [score for img_id, score in filtered_results],
         "num_selected": num_selected,
         "offset": config.MAX_EXPLORE_RESULTS_IMAGES_PER_PAGE
     }
@@ -200,6 +199,7 @@ def load_more_results(current_images, current_state, trigger_data):
         raise PreventUpdate
 
     all_ids = current_state["all_ids"]
+    all_scores = current_state["all_scores"]
     current_offset = current_state.get("offset", 0)
     next_offset = current_offset + config.MAX_EXPLORE_RESULTS_IMAGES_PER_PAGE
 
@@ -209,10 +209,8 @@ def load_more_results(current_images, current_state, trigger_data):
         html.Div(
             html.Img(
                 src=Dataset.get_image_url(artwork_id),
-                # Use a dictionary ID for pattern-matching
                 id={"type": "thumb-img", "index": artwork_id},
                 n_clicks=0,
-                style={"cursor": "pointer", "width": "100%"} # Pointer cursor indicates interactivity
             ),
             className="explore-results-item"
         )
@@ -232,11 +230,10 @@ def load_more_results(current_images, current_state, trigger_data):
     num_selected = current_state["num_selected"]
     
     if total_results < config.MAX_EXPLORE_RESULTS_IMAGES_PER_PAGE:
-        summary = html.P(f"Found {total_results} related images out of {num_selected} selected images.")
+        summary = html.P(f"Found {total_results} related images out of {num_selected} selected images with {int(max(all_scores) * 100)}% confidence.")
     else:
-        summary = html.P(f"Found {total_results} related images out of {num_selected} selected images. Displaying top {len(updated_grid)} results.")
+        summary = html.P(f"Found {total_results} related images out of {num_selected} selected images with {int(max(all_scores) * 100)}% confidence. Displaying top {len(updated_grid)} results.")
 
-    # Update just the offset pointer for the next cycle
     current_state["offset"] = next_offset
 
     return (

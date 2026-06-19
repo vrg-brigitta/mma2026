@@ -86,7 +86,9 @@ def create_scatterplot_figure(projection):
     fig.update_traces(
         customdata=Dataset.get().index, 
         marker={'color': config.SCATTERPLOT_COLOR},
-        unselected_marker_opacity=0.60)
+        unselected_marker_opacity=0.6,
+        selected_marker_color=config.SCATTERPLOT_SELECTED_COLOR, 
+    )
     fig.update_layout(dragmode='select')
     fig.update_yaxes(scaleanchor="x", scaleratio=1)
     fig.add_trace(
