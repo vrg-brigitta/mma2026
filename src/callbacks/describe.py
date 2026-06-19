@@ -51,8 +51,8 @@ def run_describe(n_clicks, selected_indices, relayout_data):
             load_more_style
         )
 
-    summary = f"Described {min(total_points, max_points)} out of {total_points} images. "
-    summary += result.get("summary", "")
+    summary = result.get("summary", "")
+    summary += f" Described {min(total_points, max_points)} out of {total_points} images."
 
     return (
         html.Div([

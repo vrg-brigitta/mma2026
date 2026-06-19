@@ -10,6 +10,7 @@ def create_explore_tab_widget():
             # Ask a question
             # =============================================
             html.H5("Ask a question"),
+            html.P("Ask about the selected or visible data on the canvas."),
             dash.dcc.Textarea(
                 id="question-input",
                 placeholder="An old Japanese woodblock print of waves",

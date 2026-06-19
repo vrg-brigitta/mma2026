@@ -133,7 +133,7 @@ def create_scatterplot(projection):
                 'displayModeBar': True,
             }
         )
-    ], style={'height': '100%', 'width': '100%'})
+    ], style={'height': '100%', 'width': '100%', 'position': 'relative'})
 
 
 def get_data_selected_on_scatterplot(selected_indices, relayout_data, projection='UMAP'):
@@ -143,7 +143,6 @@ def get_data_selected_on_scatterplot(selected_indices, relayout_data, projection
     dataset = Dataset.get()
     x_col, y_col = ('umap_x', 'umap_y') if projection == 'UMAP' else ('tsne_x', 'tsne_y')
 
-    # Check our lean integer array store
     if selected_indices:
         return dataset.iloc[selected_indices]
 

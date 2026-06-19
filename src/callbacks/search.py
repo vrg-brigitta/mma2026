@@ -5,11 +5,32 @@ from dash.exceptions import PreventUpdate
 from src.llm_handlers.query_handler import query_handler
 from src.llm_handlers.clip_handler import clip_handler
 from src.Dataset import Dataset
+from src import config
+from src.widgets.scatterplot import get_data_selected_on_scatterplot
 
 
 # ==========================================
 #  Invoke search on submit
 # ==========================================
+
+def remove_ids_outside_viewport(ids, scores, selected_indices, relayout_data):
+    """
+    Given a list of IDs, filter out those that are not visible in the current
+    viewport of the scatterplot.
+    """
+    if not selected_indices and not relayout_data:
+        return ids
+    
+    data_selected = get_data_selected_on_scatterplot(selected_indices, relayout_data)
+    allowed_ids = set(data_selected.index)
+    
+    filtered_results = [
+        (img_id, score) 
+        for img_id, score in zip(ids, scores) 
+        if img_id in allowed_ids
+    ]
+
+    return filtered_results, len(data_selected)
 
 @callback(
     Output("submit-question-btn", "disabled", allow_duplicate=True),
@@ -56,9 +77,11 @@ def set_search_loading_state(n_clicks):
     Output("load-more-btn", "children", allow_duplicate=True),
     State("question-input", "value"),
     Input("search-trigger-store", "data"),
+    State("canvas-selected-indices-store", "data"),
+    State("scatterplot", "relayoutData"),
     prevent_initial_call=True,
 )
-def run_initial_search(user_query, store_data):
+def run_initial_search(user_query, store_data, selected_indices, relayout_data):
     """
     When the search trigger store is updated (by clicking the submit button),
     we run the search and update the results grid.
@@ -90,7 +113,11 @@ def run_initial_search(user_query, store_data):
             submit_btn_disabled, submit_btn_label, empty_state, hide_btn, True, "Load more results"
         )
 
-    top_ids = ids[:10]
+    filtered_results, num_selected = remove_ids_outside_viewport(ids, scores, selected_indices, relayout_data)
+    top_pairs = filtered_results[:config.MAX_EXPLORE_RESULTS_IMAGES_PER_PAGE]
+    top_ids = [img_id for img_id, score in top_pairs]
+    # top_scores = [score for img_id, score in top_pairs] 
+
     images = [
         html.Div(
             html.Img(
@@ -106,10 +133,28 @@ def run_initial_search(user_query, store_data):
     ]
 
     has_more = len(ids) > len(images)
-    load_more_style = {"display": "block"} if has_more else {"display": "none"}
-    summary = html.P(f"Found {len(ids)} images. Displaying top {len(images)} results.")
+    total_results = len(filtered_results)
 
-    new_state = {"all_ids": ids, "offset": 10}
+    if total_results == 0:
+        return (
+            [],
+            html.P("Your question did not match any images."),
+            submit_btn_disabled, submit_btn_label, empty_state, hide_btn, True, "Load more results"
+        )
+
+
+    if total_results < config.MAX_EXPLORE_RESULTS_IMAGES_PER_PAGE:
+        load_more_style = {"display": "none"}
+        summary = html.P(f"Found {total_results} related images out of {num_selected} selected images.")
+    else:
+        load_more_style = {"display": "block"}
+        summary = html.P(f"Found {total_results} related images out of {num_selected} selected images. Displaying top {len(top_ids)} results.")
+
+    new_state = {
+        "all_ids": [img_id for img_id, score in filtered_results],
+        "num_selected": num_selected,
+        "offset": config.MAX_EXPLORE_RESULTS_IMAGES_PER_PAGE
+    }
 
     return (
         images, summary, submit_btn_disabled, submit_btn_label,
@@ -156,7 +201,7 @@ def load_more_results(current_images, current_state, trigger_data):
 
     all_ids = current_state["all_ids"]
     current_offset = current_state.get("offset", 0)
-    next_offset = current_offset + 10
+    next_offset = current_offset + config.MAX_EXPLORE_RESULTS_IMAGES_PER_PAGE
 
     next_batch_ids = all_ids[current_offset:next_offset]
 
@@ -183,7 +228,13 @@ def load_more_results(current_images, current_state, trigger_data):
         load_more_style = {"display": "block"}
         btn_disabled = False
 
-    summary = html.P(f"Found {len(all_ids)} images. Displaying top {len(updated_grid)} results.")
+    total_results = len(all_ids)
+    num_selected = current_state["num_selected"]
+    
+    if total_results < config.MAX_EXPLORE_RESULTS_IMAGES_PER_PAGE:
+        summary = html.P(f"Found {total_results} related images out of {num_selected} selected images.")
+    else:
+        summary = html.P(f"Found {total_results} related images out of {num_selected} selected images. Displaying top {len(updated_grid)} results.")
 
     # Update just the offset pointer for the next cycle
     current_state["offset"] = next_offset
