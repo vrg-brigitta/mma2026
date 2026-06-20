@@ -1,4 +1,4 @@
-from dash import callback, Output, Input, State, dash, clientside_callback
+from dash import callback, Output, Input, dash, clientside_callback
 from PIL import Image
 from src import config
 
@@ -37,3 +37,14 @@ clientside_callback(
     Input("scatterplot", "selectedData"),
     prevent_initial_call=True
 )
+
+@callback(
+    Output("scatterplot", "figure"),
+    Input("source-visibility-checklist", "value"),
+    Input("scatterplot", "figure"),
+    prevent_initial_call=True,
+)
+def update_scatterplot_visibility(selected_sources, scatterplot_fig):
+    if selected_sources is None:
+        selected_sources = []
+    return scatterplot.apply_source_visibility(scatterplot_fig, selected_sources)

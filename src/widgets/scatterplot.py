@@ -24,12 +24,38 @@ def get_source_from_primary_image(df):
     return df["primary_image"].str.extract(r'^([^_]+)')[0]
 
 
-def highlight_class_on_scatterplot(scatterplot):
-    dataset = Dataset.get()
+def get_source_colors(dataset):
     sources = get_source_from_primary_image(dataset).unique()
+    return dict(zip(sources, trace_colors))
 
-    source_colors = dict(zip(sources, trace_colors))
-    
+
+def build_source_marker_properties(dataset, visible_sources=None):
+    source_series = get_source_from_primary_image(dataset)
+    source_colors = get_source_colors(dataset)
+
+    colors = source_series.map(source_colors).tolist()
+    if visible_sources is None:
+        visible_sources = source_series.unique().tolist()
+
+    opacities = [1.0 if source in visible_sources else 0.0 for source in source_series]
+    return colors, opacities
+
+
+def apply_source_visibility(scatterplot_fig, visible_sources):
+    dataset = Dataset.get()
+    colors, opacities = build_source_marker_properties(dataset, visible_sources)
+
+    marker = scatterplot_fig['data'][0].get('marker', {})
+    marker['color'] = colors
+    marker['opacity'] = opacities
+    scatterplot_fig['data'][0]['marker'] = marker
+
+    return scatterplot_fig
+
+
+def highlight_class_on_scatterplot(scatterplot, selected_genres=None):
+    dataset = Dataset.get()
+    source_colors = get_source_colors(dataset)
     source_series = get_source_from_primary_image(dataset)
     default_colors = source_series.map(source_colors)
 
@@ -37,13 +63,19 @@ def highlight_class_on_scatterplot(scatterplot):
     selected_ids = []
     if 'selectedpoints' in scatterplot_fig_data:
         selected_ids = [dataset.index[i] for i in scatterplot_fig_data['selectedpoints']]
-    
+
     colors = [
         config.SCATTERPLOT_SELECTED_COLOR if image_id in selected_ids else default_colors.loc[image_id]
         for image_id in dataset.index
     ]
 
-    scatterplot['data'][0]['marker'] = {'color': colors}
+    marker = scatterplot_fig_data.get('marker', {})
+    current_opacity = marker.get('opacity', [1.0] * len(dataset))
+    marker['color'] = colors
+    marker['opacity'] = current_opacity
+    scatterplot['data'][0]['marker'] = marker
+
+    return scatterplot
 
 
 def add_images_to_scatterplot(scatterplot_fig, zoom_data=None, projection=config.DEFAULT_PROJECTION):
@@ -102,86 +134,30 @@ def add_images_to_scatterplot(scatterplot_fig, zoom_data=None, projection=config
         ))
     return scatterplot_fig
 
-def create_scatterplot_figure(projection):
+def create_scatterplot_figure(projection, dataset, sources_of_dataset, sources):
     x_col, y_col = get_columnNamesFromProjection(projection)
 
-    dataset = Dataset.get()
+    marker_colors, marker_opacities = build_source_marker_properties(dataset)
 
-    fig = plotly.express.scatter(data_frame=dataset, x=x_col, y=y_col,
-        labels=dict(zip((x_col, y_col), ('x', 'y'))))
-
-    fig.update_traces(
-        customdata=dataset.index, 
-        marker={'color': config.SCATTERPLOT_COLOR},
-        unselected_marker_opacity=0.6,
-        selected_marker_color=config.SCATTERPLOT_SELECTED_COLOR, 
+    fig = go.Figure(
+        data=go.Scatter(
+            x=dataset[x_col],
+            y=dataset[y_col],
+            mode="markers",
+            customdata=dataset.index,
+            marker=dict(
+                color=marker_colors,
+                size=7,
+                opacity=marker_opacities,
+            ),
+            selected_marker=dict(color=config.SCATTERPLOT_SELECTED_COLOR),
+            unselected_marker=dict(opacity=0.6),
+        )
     )
-    fig.update_layout(dragmode='select')
 
+    fig.update_layout(dragmode='select')
     fig.update_xaxes(title=None, showticklabels=False)
     fig.update_yaxes(scaleanchor="x", scaleratio=1, title=None, showticklabels=False)
-
-    # fig.add_trace(
-    #     go.Scatter(
-    #         x=[None],
-    #         y=[None],
-    #         mode="markers",
-    #         name='selected',
-    #         marker=dict(size=7, color=config.SCATTERPLOT_SELECTED_COLOR, symbol='circle'),
-    #     ),
-    # )
-
-    sources_of_dataset = get_source_from_primary_image(dataset)
-    sources = sources_of_dataset.unique()
-    source_colors = dict(zip(sources, trace_colors))
-
-    for source in sources:
-        source_rows = dataset[sources_of_dataset == source]
-        fig.add_trace(
-            go.Scatter(
-                x=source_rows[x_col],
-                y=source_rows[y_col],
-                mode="markers",
-                name=source,
-                marker=dict(size=7, color=source_colors[source], symbol='circle'),
-                #visible='legendonly',
-            ),
-        )
-
-    fig.for_each_trace(lambda t: print(t.name, t.marker.color))
-
-    source_series = sources_of_dataset
-    colors = source_series.map(source_colors)
-    fig.data[0].marker.color = colors
-
-    all_visibility = [True] * len(sources) # the last is for the selected ones
-    buttons = [
-        dict(
-            label="All",
-            method="update",
-            args=[{"visible": all_visibility}],
-        )
-    ]
-
-    for i, source in enumerate(sources):
-        visibility = [j == i for j in range(len(sources))] # the last is for hiding selected ones
-
-        buttons.append(
-            dict(
-                label=f"{source} Only",
-                method="update",
-                args=[{"visible": visibility}],
-            )
-        )
-
-    fig.update_layout(
-        updatemenus=[
-            dict(
-                type="buttons",
-                buttons=buttons,
-        )]
-    )
-
     fig.update_layout(legend=dict(
         orientation="h",
         yanchor="bottom",
@@ -192,12 +168,41 @@ def create_scatterplot_figure(projection):
     return fig
 
 
+def get_source_label(source: str):
+    if source == "MET":
+        return 'MET'
+    elif source == "UKI":
+        return 'Ukiyo-e'
+    if source == "GAC":
+        return 'Government Art Collection (UK)'
+    elif source == "WIKI":
+        return 'Wikidata'
+    elif source == "SEM":
+        return 'SemArt'
+    elif source == "RM":
+        return 'Rijksmuseum'
+    else:
+        return source
+
 def create_scatterplot(projection):
+    dataset = Dataset.get()
+    sources_of_dataset = get_source_from_primary_image(dataset)
+    sources = sources_of_dataset.unique()
+
     return html.Div([
         dcc.Store(id="canvas-selected-indices-store", data=[]),
-
+        html.Div([
+            #dbc.Label("Sources", html_for="source-visibility-checklist", className="form-label"),
+            dbc.Checklist(
+                id="source-visibility-checklist",
+                options=[{"label": get_source_label(source), "value": source} for source in sources],
+                value=list(sources),
+                inline=True,
+                labelClassName="me-3",
+            )
+        ], className="mb-2 sources-block"),
         dcc.Graph(
-            figure=create_scatterplot_figure(projection),
+            figure=create_scatterplot_figure(projection, dataset, sources_of_dataset, sources),
             id='scatterplot',
             className='stretchy-widget border-widget',
             responsive=True,
