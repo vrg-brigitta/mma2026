@@ -5,7 +5,6 @@ from src import config
 from src.Dataset import Dataset
 from src.widgets import scatterplot
 
-
 # @callback(
 #     Output('scatterplot', 'figure', allow_duplicate=True),
 #     State('scatterplot', 'figure'),
@@ -21,16 +20,6 @@ from src.widgets import scatterplot
 
 #     print('Scatterplot is zoomed')
 #     return scatterplot.add_images_to_scatterplot(scatterplot_fig, zoom_data)
-
-
-# @callback(
-#     State('scatterplot', 'figure'),
-#     Input("scatterplot", "selectedData"),
-# )
-# def scatterplot_is_selected(scatterplot_fig, data_selected):
-#     print('Scatterplot is selected')
-
-#     scatterplot.highlight_class_on_scatterplot(scatterplot_fig)
 
 clientside_callback(
     """

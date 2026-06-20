@@ -46,7 +46,7 @@ def highlight_class_on_scatterplot(scatterplot):
     scatterplot['data'][0]['marker'] = {'color': colors}
 
 
-def add_images_to_scatterplot(scatterplot_fig, zoom_data=None):
+def add_images_to_scatterplot(scatterplot_fig, zoom_data=None, projection=config.DEFAULT_PROJECTION):
     if zoom_data is None:
         zoom_data = {}
 
@@ -75,8 +75,7 @@ def add_images_to_scatterplot(scatterplot_fig, zoom_data=None):
 
     scatterplot_fig['layout']['images'] = []
 
-    # TODO support for multiple projections
-    x_col, y_col = get_columnNamesFromProjection(config.DEFAULT_PROJECTION) 
+    x_col, y_col = get_columnNamesFromProjection(projection)
     dataset = Dataset.get()
 
     images_in_zoom = []
@@ -106,11 +105,13 @@ def add_images_to_scatterplot(scatterplot_fig, zoom_data=None):
 def create_scatterplot_figure(projection):
     x_col, y_col = get_columnNamesFromProjection(projection)
 
-    fig = plotly.express.scatter(data_frame=Dataset.get(), x=x_col, y=y_col,
+    dataset = Dataset.get()
+
+    fig = plotly.express.scatter(data_frame=dataset, x=x_col, y=y_col,
         labels=dict(zip((x_col, y_col), ('x', 'y'))))
 
     fig.update_traces(
-        customdata=Dataset.get().index, 
+        customdata=dataset.index, 
         marker={'color': config.SCATTERPLOT_COLOR},
         unselected_marker_opacity=0.6,
         selected_marker_color=config.SCATTERPLOT_SELECTED_COLOR, 
@@ -120,47 +121,50 @@ def create_scatterplot_figure(projection):
     fig.update_xaxes(title=None, showticklabels=False)
     fig.update_yaxes(scaleanchor="x", scaleratio=1, title=None, showticklabels=False)
 
-    fig.add_trace(
-        go.Scatter(
-            x=[None],
-            y=[None],
-            mode="markers",
-            name='selected',
-            marker=dict(size=7, color="red", symbol='circle'),
-        ),
-    )
+    # fig.add_trace(
+    #     go.Scatter(
+    #         x=[None],
+    #         y=[None],
+    #         mode="markers",
+    #         name='selected',
+    #         marker=dict(size=7, color=config.SCATTERPLOT_SELECTED_COLOR, symbol='circle'),
+    #     ),
+    # )
 
-    dataset = Dataset.get()
-    sources = get_source_from_primary_image(dataset).unique()
+    sources_of_dataset = get_source_from_primary_image(dataset)
+    sources = sources_of_dataset.unique()
     source_colors = dict(zip(sources, trace_colors))
 
     for source in sources:
+        source_rows = dataset[sources_of_dataset == source]
         fig.add_trace(
             go.Scatter(
-                x=[None],
-                y=[None],
+                x=source_rows[x_col],
+                y=source_rows[y_col],
                 mode="markers",
                 name=source,
                 marker=dict(size=7, color=source_colors[source], symbol='circle'),
+                #visible='legendonly',
             ),
         )
 
-    source_series = get_source_from_primary_image(dataset)
+    fig.for_each_trace(lambda t: print(t.name, t.marker.color))
+
+    source_series = sources_of_dataset
     colors = source_series.map(source_colors)
     fig.data[0].marker.color = colors
 
+    all_visibility = [True] * len(sources) # the last is for the selected ones
     buttons = [
         dict(
             label="All",
             method="update",
-            args=[{"visible": [True] * (len(sources) + 1)}],
-        ) 
+            args=[{"visible": all_visibility}],
+        )
     ]
 
     for i, source in enumerate(sources):
-        # Create a visibility list where only the current index is True
-        visibility = [False] * (len(sources) + 1)
-        visibility[i+1] = True
+        visibility = [j == i for j in range(len(sources))] # the last is for hiding selected ones
 
         buttons.append(
             dict(
@@ -199,7 +203,7 @@ def create_scatterplot(projection):
             responsive=True,
             config={
                 'displaylogo': False,
-                'modeBarButtonsToRemove': ['resetScale2d', 'lasso2d', 'toImage'],
+                'modeBarButtonsToRemove': ['resetScale2d', 'toImage'],
                 'displayModeBar': True,
                 'showAxisDragHandles': True,
                 'showTips': True,
@@ -214,7 +218,7 @@ def get_data_selected_on_scatterplot(selected_indices, relayout_data, projection
     Optimized helper accepting pre-stripped integer indices from the client store.
     """
     dataset = Dataset.get()
-    x_col, y_col = ('umap_x', 'umap_y') if projection == 'UMAP' else ('tsne_x', 'tsne_y')
+    x_col, y_col = get_columnNamesFromProjection(projection) 
 
     if selected_indices:
         return dataset.iloc[selected_indices]
