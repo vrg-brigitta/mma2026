@@ -15,6 +15,7 @@ from src.llm_handlers.clip_handler import clip_handler
 # need to import callbacks to register them, even if they are not used directly in this file
 import callbacks.scatterplot
 import callbacks.search
+import callbacks.describe
 # import callbacks.pipeline
 
 def run_ui():
@@ -36,7 +37,7 @@ def run_ui():
         ], justify='between', className='main-row'),
     ], fluid=True, id='container', className='app-container')
 
-    app.run(debug=True, use_reloader=False)
+    app.run(debug=True, use_reloader=False, dev_tools_hot_reload=False)
 
 
 def main():

@@ -112,8 +112,9 @@ def create_scatterplot_figure(projection):
     fig.update_traces(
         customdata=Dataset.get().index, 
         marker={'color': config.SCATTERPLOT_COLOR},
-        unselected_marker_opacity=0.60)
-
+        unselected_marker_opacity=0.6,
+        selected_marker_color=config.SCATTERPLOT_SELECTED_COLOR, 
+    )
     fig.update_layout(dragmode='select')
 
     fig.update_xaxes(title=None, showticklabels=False)
@@ -188,7 +189,10 @@ def create_scatterplot_figure(projection):
 
 
 def create_scatterplot(projection):
-    return dcc.Graph(
+    return html.Div([
+        dcc.Store(id="canvas-selected-indices-store", data=[]),
+
+        dcc.Graph(
             figure=create_scatterplot_figure(projection),
             id='scatterplot',
             className='stretchy-widget border-widget',
@@ -202,18 +206,30 @@ def create_scatterplot(projection):
                 'scrollZoom': True,
             }
         )
+    ], style={'height': '100%', 'width': '100%', 'position': 'relative'})
 
 
-def get_data_selected_on_scatterplot(scatterplot_fig):
-    scatterplot_fig_data = scatterplot_fig['data'][0]
+def get_data_selected_on_scatterplot(selected_indices, relayout_data, projection='UMAP'):
+    """
+    Optimized helper accepting pre-stripped integer indices from the client store.
+    """
+    dataset = Dataset.get()
+    x_col, y_col = ('umap_x', 'umap_y') if projection == 'UMAP' else ('tsne_x', 'tsne_y')
 
-    if 'selectedpoints' in scatterplot_fig_data:
-        dataset = Dataset.get()
-        selected_image_ids = [dataset.index[i] for i in scatterplot_fig_data['selectedpoints']]
-        data_selected = dataset.loc[selected_image_ids]
-    else:
-        data_selected = Dataset.get()
+    if selected_indices:
+        return dataset.iloc[selected_indices]
 
-    return data_selected
+    # Viewport fallback (Zoom/Pan)
+    if relayout_data and all(k in relayout_data for k in ['xaxis.range[0]', 'xaxis.range[1]', 'yaxis.range[0]', 'yaxis.range[1]']):
+        min_x = float(relayout_data['xaxis.range[0]'])
+        max_x = float(relayout_data['xaxis.range[1]'])
+        min_y = float(relayout_data['yaxis.range[0]'])
+        max_y = float(relayout_data['yaxis.range[1]'])
 
+        visible_mask = (
+            (dataset[x_col] >= min_x) & (dataset[x_col] <= max_x) &
+            (dataset[y_col] >= min_y) & (dataset[y_col] <= max_y)
+        )
+        return dataset[visible_mask]
 
+    return dataset
