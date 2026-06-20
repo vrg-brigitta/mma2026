@@ -26,7 +26,7 @@ def set_describe_loading_state(n_clicks):
     Output("explore-results-grid", "children", allow_duplicate=True),
     Output("load-more-btn", "style", allow_duplicate=True),
     Output("describe-btn", "disabled", allow_duplicate=True),
-    Output("describe-btn", "children", allow_duplicate=True), 
+    Output("describe-btn", "children", allow_duplicate=True),
     Input("describe-trigger-store", "data"),
     State("canvas-selected-indices-store", "data"),
     State("scatterplot", "relayoutData"),
@@ -38,7 +38,7 @@ def run_describe(trigger_data, selected_indices, relayout_data):
 
     grid_children = []
     load_more_style = {"display": "none"}
-    
+
     btn_disabled = False
     btn_label = "Describe data"
 
@@ -80,7 +80,7 @@ def run_describe(trigger_data, selected_indices, relayout_data):
                 html.P(result.get("summary", "")),
                 html.Ul([html.Li(t) for t in result.get("trends", [])]),
             ]),
-            html.P(f" Described {min(total_points, max_points)} out of {total_points} images.")
+            html.P(f" Described {min(total_points, max_points)} out of {total_points} images. Numbers behind words refer to the amount of results related to that topic.")
         ], className="describe-results-summary"),
         grid_children,
         load_more_style,
