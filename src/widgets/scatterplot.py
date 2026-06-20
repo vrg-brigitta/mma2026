@@ -46,7 +46,7 @@ def apply_source_visibility(scatterplot_fig, visible_sources):
     colors, opacities = build_source_marker_properties(dataset, visible_sources)
 
     marker = scatterplot_fig['data'][0].get('marker', {})
-    marker['color'] = colors
+    #marker['color'] = colors
     marker['opacity'] = opacities
     scatterplot_fig['data'][0]['marker'] = marker
 
