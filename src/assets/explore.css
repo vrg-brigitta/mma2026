@@ -2,6 +2,16 @@
     flex-grow: 0;
 }
 
+.results-summary-container {
+    overflow: hidden;
+}
+
+.describe-results-summary {
+    max-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
 .explore-results-container {
     overflow: hidden;
 }
@@ -10,12 +20,13 @@
     min-height: 0;
 }
 
-.explore-results-inner-container > div {
+.explore-results-container > div:first-of-type {
     height: 100%;
+    overflow: hidden;
 }
 
 /* the container where the results are displayed */
-.explore-results-inner-container > div > div:first-child {
+.explore-results-container > div > div:first-child {
     height: 100%;
     overflow-x: hidden;
     overflow-y: auto;
@@ -23,7 +34,7 @@
 }
 
 /* actual spinner overlay */
-.explore-results-inner-container > div > div:last-child {
+.explore-results-container > div > div:last-child {
     background-color: rgba(255, 255, 255, 0.8);
 }
 
@@ -67,12 +78,10 @@
     resize: none;
 }
 
-
 .image-preview-modal .modal-dialog {
     margin: 0 auto;
     padding: 20px;
 }
-
 
 .image-preview-modal .modal-content {
     max-height: calc(100vh - 40px);
@@ -96,17 +105,18 @@
 }
 
 .modal-image-col {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 0;
+    position: relative;
     border-right: 1px solid #dee2e6;
 }
 
 .modal-preview-image {
+    position: absolute;
+    top: 0;
+    left: 0;
     height: 100%;
     width: 100%;
     object-fit: contain;
+    padding: 20px;
 }
 
 .modal-details-col {

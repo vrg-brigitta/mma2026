@@ -81,7 +81,7 @@ def run_describe(trigger_data, selected_indices, relayout_data):
                 html.Ul([html.Li(t) for t in result.get("trends", [])]),
             ]),
             html.P(f" Described {min(total_points, max_points)} out of {total_points} images.")
-        ]),
+        ], className="describe-results-summary"),
         grid_children,
         load_more_style,
         btn_disabled,

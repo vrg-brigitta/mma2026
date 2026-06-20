@@ -66,11 +66,17 @@ def create_explore_tab_widget():
             # =============================================
             dbc.Stack([
                 html.H5("Results"),
-                html.Div(html.P("Ask a question or describe the data you're interested in."), id="results-summary"),
-                html.Div(
-                    dcc.Loading(children=dbc.Stack(id="explore-results-grid", className="explore-results-grid")),
-                    className="explore-results-inner-container"
-                ),
+                dcc.Loading([
+                    html.Div(
+                        html.P("Ask a question or describe the data you're interested in."),
+                        id="results-summary",
+                        className="results-summary-container"
+                    ),
+                    html.Div(
+                        dbc.Stack(id="explore-results-grid", className="explore-results-grid"),
+                        className="explore-results-inner-container"
+                    )
+                ]),
                 dbc.Stack([
                     html.Button(
                         "Load more results",
