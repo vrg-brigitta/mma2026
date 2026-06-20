@@ -141,7 +141,7 @@ def create_scatterplot_figure(projection, dataset, sources_of_dataset, sources):
     marker_colors, marker_opacities = build_source_marker_properties(dataset)
 
     fig = go.Figure(
-        data=go.Scatter(
+        data=go.Scattergl(
             x=dataset[x_col],
             y=dataset[y_col],
             mode="markers",
