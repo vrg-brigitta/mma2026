@@ -146,7 +146,7 @@ def create_scatterplot_figure(projection, dataset, sources_of_dataset, sources):
             mode="markers",
             customdata=dataset.index,
             marker=dict(
-                color=marker_colors,
+                #color=marker_colors,
                 size=7,
                 opacity=marker_opacities,
             ),
