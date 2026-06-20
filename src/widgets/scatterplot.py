@@ -137,6 +137,7 @@ def add_images_to_scatterplot(scatterplot_fig, zoom_data=None, projection=config
 def create_scatterplot_figure(projection, dataset, sources_of_dataset, sources):
     x_col, y_col = get_columnNamesFromProjection(projection)
 
+    source_series = get_source_from_primary_image(dataset)
     marker_colors, marker_opacities = build_source_marker_properties(dataset)
 
     fig = go.Figure(
@@ -144,7 +145,7 @@ def create_scatterplot_figure(projection, dataset, sources_of_dataset, sources):
             x=dataset[x_col],
             y=dataset[y_col],
             mode="markers",
-            customdata=dataset.index,
+            customdata=source_series.tolist(),
             marker=dict(
                 #color=marker_colors,
                 size=7,

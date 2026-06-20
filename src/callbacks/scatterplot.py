@@ -1,4 +1,4 @@
-from dash import callback, Output, Input, dash, clientside_callback
+from dash import callback, Output, Input, State, dash, clientside_callback
 from PIL import Image
 from src import config
 
@@ -38,13 +38,32 @@ clientside_callback(
     prevent_initial_call=True
 )
 
-@callback(
+clientside_callback(
+    """
+    function(selected_sources, figure) {
+        if (!figure || !figure.data || figure.data.length === 0) {
+            return figure;
+        }
+
+        if (!selected_sources) {
+            selected_sources = [];
+        }
+
+        const sourceValues = figure.data[0].customdata || [];
+        const opacities = sourceValues.map(function(source) {
+            return selected_sources.indexOf(source) !== -1 ? 1.0 : 0.0;
+        });
+
+        const newFigure = Object.assign({}, figure);
+        newFigure.data = figure.data.slice();
+        const trace = Object.assign({}, newFigure.data[0]);
+        trace.marker = Object.assign({}, trace.marker || {}, {opacity: opacities});
+        newFigure.data[0] = trace;
+        return newFigure;
+    }
+    """,
     Output("scatterplot", "figure"),
     Input("source-visibility-checklist", "value"),
-    Input("scatterplot", "figure"),
-    prevent_initial_call=True,
+    State("scatterplot", "figure"),
+    prevent_initial_call=True
 )
-def update_scatterplot_visibility(selected_sources, scatterplot_fig):
-    if selected_sources is None:
-        selected_sources = []
-    return scatterplot.apply_source_visibility(scatterplot_fig, selected_sources)
