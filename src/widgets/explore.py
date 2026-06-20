@@ -38,6 +38,7 @@ def create_explore_tab_widget():
             dcc.Store(id="search-trigger-store"),
             dcc.Store(id="load-more-trigger-store"),
             dcc.Store(id="search-state-store", data={"all_ids": [], "offset": 0}),
+            dcc.Store(id="result-img-clicks-tracker-store", data={}),
 
             html.Hr(),
 
@@ -84,11 +85,27 @@ def create_explore_tab_widget():
         # Modal for image preview
         # =============================================
         dbc.Modal([
-            dbc.ModalHeader(dbc.ModalTitle("Image Preview"), close_button=True),
+            dbc.ModalHeader(dbc.ModalTitle("Artwork Detail View"), close_button=True),
             dbc.ModalBody(
-                html.Div([
-                    html.Img(id="modal-preview-img")
-                ], className="text-center")
+                dbc.Row([
+                    dbc.Col(
+                        html.Img(id="modal-preview-img", className="modal-preview-image"),
+                        md=7, 
+                        className="modal-image-col text-center"
+                    ),
+
+                    dbc.Col([                      
+                        html.Div(id="modal-metadata-container", className="modal-metadata-scroll"),
+                        
+                        html.Button(
+                            "Show on Canvas",
+                            id="show-on-canvas-btn",
+                            className="btn btn-success btn-lg w-100 modal-action-btn",
+                            n_clicks=0
+                        )
+                    ], md=5, className="modal-details-col")
+                ], className="modal-body-row")
             ),
-        ], id="image-preview-modal", className="image-preview-modal", size="xl", centered=True)
+            dcc.Store(id="active-modal-artwork-id")
+        ], id="image-preview-modal", size="xl", centered=True, className="image-preview-modal")
     ], className="sidebar-container border-widget")

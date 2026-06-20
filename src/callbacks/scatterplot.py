@@ -49,8 +49,10 @@ clientside_callback(
             selected_sources = [];
         }
 
-        const sourceValues = figure.data[0].customdata || [];
-        const opacities = sourceValues.map(function(source) {
+        // customdata is [[id1, source1], [id2, source2], ...]
+        const customDataPairs = figure.data[0].customdata || [];
+        const opacities = customDataPairs.map(function(pair) {
+            const source = pair ? pair[1] : null;
             return selected_sources.indexOf(source) !== -1 ? 1.0 : 0.0;
         });
 

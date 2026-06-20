@@ -1,12 +1,12 @@
 import dash
-from dash import callback, Input, Output, State, html, clientside_callback, ALL
+from dash import callback, Input, Output, State, html, clientside_callback, ALL, Patch
 from dash.exceptions import PreventUpdate
 
 from src.llm_handlers.query_handler import query_handler
 from src.llm_handlers.clip_handler import clip_handler
 from src.Dataset import Dataset
 from src import config
-from src.widgets.scatterplot import get_data_selected_on_scatterplot
+from src.widgets.scatterplot import get_data_selected_on_scatterplot, get_column_names_from_projection
 
 
 # ==========================================
@@ -249,29 +249,97 @@ def load_more_results(current_images, current_state, trigger_data):
 @callback(
     Output("image-preview-modal", "is_open"),
     Output("modal-preview-img", "src"),
+    Output("modal-metadata-container", "children"),
+    Output("active-modal-artwork-id", "data"),
+    Output("result-img-clicks-tracker-store", "data"),
     Input({"type": "thumb-img", "index": ALL}, "n_clicks"),
     State("image-preview-modal", "is_open"),
+    State("result-img-clicks-tracker-store", "data"),
     prevent_initial_call=True
 )
-def toggle_image_lightbox(thumb_clicks, is_open):
+def toggle_image_lightbox(thumb_clicks, is_open, previous_clicks):
     ctx = dash.callback_context
-
-    if not ctx.triggered:
+    if not ctx.triggered or not ctx.triggered_id:
         raise PreventUpdate
 
-    trigger = ctx.triggered[0]
-    trigger_id = ctx.triggered_id
+    previous_clicks = previous_clicks or {}
+    
+    artwork_id = str(ctx.triggered_id.get("index"))
+    current_val = ctx.triggered[0].get("value") or 0
 
-    if isinstance(trigger_id, dict) and trigger_id.get("type") == "thumb-img":
-        if trigger.get("value") is None or trigger.get("value") == 0:
-            raise PreventUpdate
+    # Return early if the click count didn't strictly increase
+    if current_val <= previous_clicks.get(artwork_id, 0):
+        previous_clicks[artwork_id] = current_val
+        return dash.no_update, dash.no_update, dash.no_update, dash.no_update, previous_clicks
 
-        artwork_id = trigger_id["index"]
-        large_img_url = Dataset.get_image_url(artwork_id)
+    previous_clicks[artwork_id] = current_val
 
-        return True, large_img_url
+    large_img_url = Dataset.get_image_url(int(artwork_id))
+    df = Dataset.get()
+    metadata_elements = []
 
-    return False, dash.no_update
+    labels = {
+        "title": "Title",
+        "description": "Description",
+        "preprocessed_description": "Generated Description",
+        "culture": "Culture",
+        "period": "Period",
+        "dynasty": "Dynasty",
+        "reign": "Reign",
+        "type": "Type",
+        "genre": "Genre",
+        "style": "Style",
+        "location": "Location",
+        "medium": "Medium",
+        "reference_country": "Reference Country",
+        "reference_region": "Reference Region",
+    }
+    
+    row = df.loc[int(artwork_id)]
+    for col, label in labels.items():
+        val = row[col]
+        if val and str(val).strip().lower() != 'nan':
+            metadata_elements.append(html.Div([
+                html.Strong(f"{label}: ", className="text-secondary"),
+                html.Span(str(val), className="text-dark ml-1")
+            ], className="mb-2 p-2 bg-light rounded border-sm"))
+
+    return True, large_img_url, metadata_elements, int(artwork_id), previous_clicks
+
+# =========================================================================
+# Go to data point on canvas when "Show on Canvas" is clicked in the modal
+# =========================================================================
+
+@callback(
+    Output("scatterplot", "figure", allow_duplicate=True),
+    Output("image-preview-modal", "is_open", allow_duplicate=True),
+    Input("show-on-canvas-btn", "n_clicks"),
+    State("active-modal-artwork-id", "data"),
+    prevent_initial_call=True
+)
+def zoom_to_artwork(n_clicks, artwork_id):
+    if not n_clicks or artwork_id is None:
+        raise PreventUpdate
+
+    x_col, y_col = get_column_names_from_projection(config.DEFAULT_PROJECTION)
+    df = Dataset.get()
+    
+    try:
+        target_point = df.loc[artwork_id]
+        target_x = target_point[x_col]
+        target_y = target_point[y_col]
+    except KeyError:
+        raise PreventUpdate
+
+    # Smaller value is more zoomed in.
+    zoom_buffer = 0.01
+
+    patched_fig = Patch()
+    patched_fig['layout']['xaxis']['range'] = [target_x - zoom_buffer, target_x + zoom_buffer]
+    patched_fig['layout']['yaxis']['range'] = [target_y - zoom_buffer, target_y + zoom_buffer]
+
+    return patched_fig, False
+
 
 # ==========================================
 # Scroll down after loading more results

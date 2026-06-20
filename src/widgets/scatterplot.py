@@ -10,7 +10,7 @@ import dash_bootstrap_components as dbc
 
 trace_colors = plotly.express.colors.qualitative.Plotly
 
-def get_columnNamesFromProjection(projection):
+def get_column_names_from_projection(projection):
     if projection == 't-SNE':
         x_col, y_col = 'tsne_x', 'tsne_y'
     elif projection == 'UMAP':
@@ -107,7 +107,7 @@ def add_images_to_scatterplot(scatterplot_fig, zoom_data=None, projection=config
 
     scatterplot_fig['layout']['images'] = []
 
-    x_col, y_col = get_columnNamesFromProjection(projection)
+    x_col, y_col = get_column_names_from_projection(projection)
     dataset = Dataset.get()
 
     images_in_zoom = []
@@ -135,19 +135,20 @@ def add_images_to_scatterplot(scatterplot_fig, zoom_data=None, projection=config
     return scatterplot_fig
 
 def create_scatterplot_figure(projection, dataset, sources_of_dataset, sources):
-    x_col, y_col = get_columnNamesFromProjection(projection)
+    x_col, y_col = get_column_names_from_projection(projection)
 
     source_series = get_source_from_primary_image(dataset)
     marker_colors, marker_opacities = build_source_marker_properties(dataset)
+
+    combined_metadata = list(zip(dataset.index.tolist(), source_series.tolist()))
 
     fig = go.Figure(
         data=go.Scattergl(
             x=dataset[x_col],
             y=dataset[y_col],
             mode="markers",
-            customdata=source_series.tolist(),
+            customdata=combined_metadata,
             marker=dict(
-                #color=marker_colors,
                 size=7,
                 opacity=marker_opacities,
             ),
@@ -224,7 +225,7 @@ def get_data_selected_on_scatterplot(selected_indices, relayout_data, projection
     Optimized helper accepting pre-stripped integer indices from the client store.
     """
     dataset = Dataset.get()
-    x_col, y_col = get_columnNamesFromProjection(projection) 
+    x_col, y_col = get_column_names_from_projection(projection) 
 
     if selected_indices:
         return dataset.iloc[selected_indices]
