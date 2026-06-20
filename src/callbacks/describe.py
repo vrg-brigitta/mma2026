@@ -6,20 +6,41 @@ from src.widgets.scatterplot import get_data_selected_on_scatterplot
 
 
 @callback(
+    Output("describe-btn", "disabled", allow_duplicate=True),
+    Output("describe-btn", "children", allow_duplicate=True),
+    Output("describe-trigger-store", "data"),
+    Input("describe-btn", "n_clicks"),
+    prevent_initial_call=True,
+)
+def set_describe_loading_state(n_clicks):
+    """
+    Instantly disables the button and updates the label when clicked.
+    """
+    if not n_clicks:
+        raise PreventUpdate
+    return True, "Describing...", n_clicks
+
+
+@callback(
     Output("results-summary", "children", allow_duplicate=True),
     Output("explore-results-grid", "children", allow_duplicate=True),
     Output("load-more-btn", "style", allow_duplicate=True),
-    Input("describe-btn", "n_clicks"),
+    Output("describe-btn", "disabled", allow_duplicate=True),
+    Output("describe-btn", "children", allow_duplicate=True), 
+    Input("describe-trigger-store", "data"),
     State("canvas-selected-indices-store", "data"),
     State("scatterplot", "relayoutData"),
     prevent_initial_call=True,
 )
-def run_describe(n_clicks, selected_indices, relayout_data):
-    if not n_clicks:
+def run_describe(trigger_data, selected_indices, relayout_data):
+    if not trigger_data:
         raise PreventUpdate
 
     grid_children = []
     load_more_style = {"display": "none"}
+    
+    btn_disabled = False
+    btn_label = "Describe data"
 
     data_selected = get_data_selected_on_scatterplot(selected_indices, relayout_data)
 
@@ -27,18 +48,18 @@ def run_describe(n_clicks, selected_indices, relayout_data):
         return (
             html.Div("No data visible in the current viewport.", className="text-warning"),
             grid_children,
-            load_more_style
+            load_more_style,
+            btn_disabled,
+            btn_label
         )
 
     total_points = len(data_selected)
     max_points = 200
 
     if total_points > max_points:
-        # Sample random <max_points> points to avoid overwhelming the LLM context window
         data_selected = data_selected.sample(max_points, random_state=42)
         print(f"Viewport exceeds threshold ({total_points}). Sampled down to {max_points} points.")
 
-    # Only extract the schema keys required by the text generation processor
     columns = [c for c in query_handler.METADATA_FIELDS if c in data_selected.columns]
     metadata_records = data_selected[columns].to_dict("records")
 
@@ -48,7 +69,9 @@ def run_describe(n_clicks, selected_indices, relayout_data):
         return (
             html.Div("Could not generate a description. Please try again.", className="text-danger"),
             grid_children,
-            load_more_style
+            load_more_style,
+            btn_disabled,
+            btn_label
         )
 
     return (
@@ -60,5 +83,7 @@ def run_describe(n_clicks, selected_indices, relayout_data):
             html.P(f" Described {min(total_points, max_points)} out of {total_points} images.")
         ]),
         grid_children,
-        load_more_style
+        load_more_style,
+        btn_disabled,
+        btn_label
     )

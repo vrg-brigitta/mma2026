@@ -57,6 +57,8 @@ def create_explore_tab_widget():
                 ], direction="horizontal", gap=2),
             ], direction="vertical", className="describe-results sidebar-group"),
 
+            dcc.Store(id="describe-trigger-store"),
+
             html.Hr(),
 
             # =============================================
