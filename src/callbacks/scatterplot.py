@@ -5,7 +5,6 @@ from src import config
 from src.Dataset import Dataset
 from src.widgets import scatterplot
 
-
 # @callback(
 #     Output('scatterplot', 'figure', allow_duplicate=True),
 #     State('scatterplot', 'figure'),
@@ -22,25 +21,6 @@ from src.widgets import scatterplot
 #     print('Scatterplot is zoomed')
 #     return scatterplot.add_images_to_scatterplot(scatterplot_fig, zoom_data)
 
-
-# @callback(
-#     State('scatterplot', 'figure'),
-#     Input("scatterplot", "selectedData"),
-# )
-# def scatterplot_is_selected(scatterplot_fig, data_selected):
-#     print('Scatterplot is selected')
-
-#     data_selected = scatterplot.get_data_selected_on_scatterplot(scatterplot_fig)
-
-#     group_by_count = (data_selected.groupby(['genre'])['genre']
-#                           .agg('count')
-#                           .to_frame('count_in_selection')
-#                           .reset_index())
-#     group_by_count['total_count'] = Dataset.class_count().loc[group_by_count['genre']].values
-#     # table_rows = group_by_count.sort_values('count_in_selection', ascending=False).to_dict("records")
-#     scatterplot.highlight_class_on_scatterplot(scatterplot_fig, None)
-
-
 clientside_callback(
     """
     function(selectedData) {
@@ -55,5 +35,35 @@ clientside_callback(
     """,
     Output("canvas-selected-indices-store", "data"),
     Input("scatterplot", "selectedData"),
+    prevent_initial_call=True
+)
+
+clientside_callback(
+    """
+    function(selected_sources, figure) {
+        if (!figure || !figure.data || figure.data.length === 0) {
+            return figure;
+        }
+
+        if (!selected_sources) {
+            selected_sources = [];
+        }
+
+        const sourceValues = figure.data[0].customdata || [];
+        const opacities = sourceValues.map(function(source) {
+            return selected_sources.indexOf(source) !== -1 ? 1.0 : 0.0;
+        });
+
+        const newFigure = Object.assign({}, figure);
+        newFigure.data = figure.data.slice();
+        const trace = Object.assign({}, newFigure.data[0]);
+        trace.marker = Object.assign({}, trace.marker || {}, {opacity: opacities});
+        newFigure.data[0] = trace;
+        return newFigure;
+    }
+    """,
+    Output("scatterplot", "figure"),
+    Input("source-visibility-checklist", "value"),
+    State("scatterplot", "figure"),
     prevent_initial_call=True
 )

@@ -91,3 +91,14 @@ fieldset:disabled .btn {
     --bs-btn-disabled-border-color: #cfcfcf;
     --bs-btn-disabled-color: #8a8a8a;
 }
+
+.sources-block {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.85);
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}

@@ -6,17 +6,79 @@ import plotly.express
 from src.Dataset import Dataset
 from src import config
 import plotly.graph_objects as go
+import dash_bootstrap_components as dbc
 
+trace_colors = plotly.express.colors.qualitative.Plotly
 
-def highlight_class_on_scatterplot(scatterplot, genres):
-    if genres:
-        colors = Dataset.get()['genre'].map(lambda x: config.SCATTERPLOT_SELECTED_COLOR if x in genres else config.SCATTERPLOT_COLOR)
+def get_columnNamesFromProjection(projection):
+    if projection == 't-SNE':
+        x_col, y_col = 'tsne_x', 'tsne_y'
+    elif projection == 'UMAP':
+        x_col, y_col = 'umap_x', 'umap_y'
     else:
-        colors = config.SCATTERPLOT_COLOR
-    scatterplot['data'][0]['marker'] = {'color': colors}
+        raise Exception('Projection not found')    
+ 
+    return x_col, y_col
+
+def get_source_from_primary_image(df):
+    return df["primary_image"].str.extract(r'^([^_]+)')[0]
 
 
-def add_images_to_scatterplot(scatterplot_fig, zoom_data=None):
+def get_source_colors(dataset):
+    sources = get_source_from_primary_image(dataset).unique()
+    return dict(zip(sources, trace_colors))
+
+
+def build_source_marker_properties(dataset, visible_sources=None):
+    source_series = get_source_from_primary_image(dataset)
+    source_colors = get_source_colors(dataset)
+
+    colors = source_series.map(source_colors).tolist()
+    if visible_sources is None:
+        visible_sources = source_series.unique().tolist()
+
+    opacities = [1.0 if source in visible_sources else 0.0 for source in source_series]
+    return colors, opacities
+
+
+def apply_source_visibility(scatterplot_fig, visible_sources):
+    dataset = Dataset.get()
+    colors, opacities = build_source_marker_properties(dataset, visible_sources)
+
+    marker = scatterplot_fig['data'][0].get('marker', {})
+    #marker['color'] = colors
+    marker['opacity'] = opacities
+    scatterplot_fig['data'][0]['marker'] = marker
+
+    return scatterplot_fig
+
+
+def highlight_class_on_scatterplot(scatterplot, selected_genres=None):
+    dataset = Dataset.get()
+    source_colors = get_source_colors(dataset)
+    source_series = get_source_from_primary_image(dataset)
+    default_colors = source_series.map(source_colors)
+
+    scatterplot_fig_data = scatterplot['data'][0]
+    selected_ids = []
+    if 'selectedpoints' in scatterplot_fig_data:
+        selected_ids = [dataset.index[i] for i in scatterplot_fig_data['selectedpoints']]
+
+    colors = [
+        config.SCATTERPLOT_SELECTED_COLOR if image_id in selected_ids else default_colors.loc[image_id]
+        for image_id in dataset.index
+    ]
+
+    marker = scatterplot_fig_data.get('marker', {})
+    current_opacity = marker.get('opacity', [1.0] * len(dataset))
+    marker['color'] = colors
+    marker['opacity'] = current_opacity
+    scatterplot['data'][0]['marker'] = marker
+
+    return scatterplot
+
+
+def add_images_to_scatterplot(scatterplot_fig, zoom_data=None, projection=config.DEFAULT_PROJECTION):
     if zoom_data is None:
         zoom_data = {}
 
@@ -45,8 +107,7 @@ def add_images_to_scatterplot(scatterplot_fig, zoom_data=None):
 
     scatterplot_fig['layout']['images'] = []
 
-    x_col = scatterplot_fig['layout']['xaxis']['title']['text']
-    y_col = scatterplot_fig['layout']['yaxis']['title']['text']
+    x_col, y_col = get_columnNamesFromProjection(projection)
     dataset = Dataset.get()
 
     images_in_zoom = []
@@ -73,43 +134,31 @@ def add_images_to_scatterplot(scatterplot_fig, zoom_data=None):
         ))
     return scatterplot_fig
 
+def create_scatterplot_figure(projection, dataset, sources_of_dataset, sources):
+    x_col, y_col = get_columnNamesFromProjection(projection)
 
-def create_scatterplot_figure(projection):
-    if projection == 't-SNE':
-        x_col, y_col = 'tsne_x', 'tsne_y'
-    elif projection == 'UMAP':
-        x_col, y_col = 'umap_x', 'umap_y'
-    else:
-        raise Exception('Projection not found')
+    source_series = get_source_from_primary_image(dataset)
+    marker_colors, marker_opacities = build_source_marker_properties(dataset)
 
-    fig = plotly.express.scatter(data_frame=Dataset.get(), x=x_col, y=y_col)
-    fig.update_traces(
-        customdata=Dataset.get().index, 
-        marker={'color': config.SCATTERPLOT_COLOR},
-        unselected_marker_opacity=0.6,
-        selected_marker_color=config.SCATTERPLOT_SELECTED_COLOR, 
+    fig = go.Figure(
+        data=go.Scatter(
+            x=dataset[x_col],
+            y=dataset[y_col],
+            mode="markers",
+            customdata=source_series.tolist(),
+            marker=dict(
+                #color=marker_colors,
+                size=7,
+                opacity=marker_opacities,
+            ),
+            selected_marker=dict(color=config.SCATTERPLOT_SELECTED_COLOR),
+            unselected_marker=dict(opacity=0.6),
+        )
     )
+
     fig.update_layout(dragmode='select')
-    fig.update_yaxes(scaleanchor="x", scaleratio=1)
-    fig.add_trace(
-        go.Scatter(
-            x=[None],
-            y=[None],
-            mode="markers",
-            name='image embedding',
-            marker=dict(size=7, color="blue", symbol='circle'),
-        ),
-    )
-    fig.add_trace(
-        go.Scatter(
-            x=[None],
-            y=[None],
-            mode="markers",
-            name='selected class',
-            marker=dict(size=7, color="red", symbol='circle'),
-        ),
-    )
-
+    fig.update_xaxes(title=None, showticklabels=False)
+    fig.update_yaxes(scaleanchor="x", scaleratio=1, title=None, showticklabels=False)
     fig.update_layout(legend=dict(
         orientation="h",
         yanchor="bottom",
@@ -120,19 +169,51 @@ def create_scatterplot_figure(projection):
     return fig
 
 
+def get_source_label(source: str):
+    if source == "MET":
+        return 'MET'
+    elif source == "UKI":
+        return 'Ukiyo-e'
+    if source == "GAC":
+        return 'Government Art Collection (UK)'
+    elif source == "WIKI":
+        return 'Wikidata'
+    elif source == "SEM":
+        return 'SemArt'
+    elif source == "RM":
+        return 'Rijksmuseum'
+    else:
+        return source
+
 def create_scatterplot(projection):
+    dataset = Dataset.get()
+    sources_of_dataset = get_source_from_primary_image(dataset)
+    sources = sources_of_dataset.unique()
+
     return html.Div([
         dcc.Store(id="canvas-selected-indices-store", data=[]),
-
+        html.Div([
+            #dbc.Label("Sources", html_for="source-visibility-checklist", className="form-label"),
+            dbc.Checklist(
+                id="source-visibility-checklist",
+                options=[{"label": get_source_label(source), "value": source} for source in sources],
+                value=list(sources),
+                inline=True,
+                labelClassName="me-3",
+            )
+        ], className="mb-2 sources-block"),
         dcc.Graph(
-            figure=create_scatterplot_figure(projection),
+            figure=create_scatterplot_figure(projection, dataset, sources_of_dataset, sources),
             id='scatterplot',
             className='stretchy-widget border-widget',
             responsive=True,
             config={
                 'displaylogo': False,
-                'modeBarButtonsToRemove': ['autoscale'],
+                'modeBarButtonsToRemove': ['resetScale2d', 'toImage'],
                 'displayModeBar': True,
+                'showAxisDragHandles': True,
+                'showTips': True,
+                'scrollZoom': True,
             }
         )
     ], style={'height': '100%', 'width': '100%', 'position': 'relative'})
@@ -143,7 +224,7 @@ def get_data_selected_on_scatterplot(selected_indices, relayout_data, projection
     Optimized helper accepting pre-stripped integer indices from the client store.
     """
     dataset = Dataset.get()
-    x_col, y_col = ('umap_x', 'umap_y') if projection == 'UMAP' else ('tsne_x', 'tsne_y')
+    x_col, y_col = get_columnNamesFromProjection(projection) 
 
     if selected_indices:
         return dataset.iloc[selected_indices]
