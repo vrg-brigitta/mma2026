@@ -78,61 +78,69 @@ def highlight_class_on_scatterplot(scatterplot, selected_genres=None):
     return scatterplot
 
 
-def add_images_to_scatterplot(scatterplot_fig, zoom_data=None, projection=config.DEFAULT_PROJECTION):
+def add_images_to_scatterplot(zoom_data=None, zoom_span=None, selected_indices=None, images_store=None, xaxis_range=None, yaxis_range=None, projection=config.DEFAULT_PROJECTION):
     if zoom_data is None:
         zoom_data = {}
 
-    xaxis = scatterplot_fig['layout'].setdefault('xaxis', {})
-    yaxis = scatterplot_fig['layout'].setdefault('yaxis', {})
+    if images_store is None:
+        images_store = []
+
+    if xaxis_range is None or yaxis_range is None:
+        return [], []
 
     if 'xaxis.range[0]' in zoom_data and 'xaxis.range[1]' in zoom_data:
         min_x = float(zoom_data['xaxis.range[0]'])
         max_x = float(zoom_data['xaxis.range[1]'])
-        xaxis['range'] = [min_x, max_x]
-        xaxis['autorange'] = False
     else:
-        if 'range' not in xaxis:
-            return scatterplot_fig
-        min_x, max_x = map(float, xaxis['range'])
+        min_x, max_x = map(float, xaxis_range)
 
     if 'yaxis.range[0]' in zoom_data and 'yaxis.range[1]' in zoom_data:
         min_y = float(zoom_data['yaxis.range[0]'])
         max_y = float(zoom_data['yaxis.range[1]'])
-        yaxis['range'] = [min_y, max_y]
-        yaxis['autorange'] = False
     else:
-        if 'range' not in yaxis:
-            return scatterplot_fig
-        min_y, max_y = map(float, yaxis['range'])
+        min_y, max_y = map(float, yaxis_range)
 
-    scatterplot_fig['layout']['images'] = []
+    if zoom_span is None:
+        span_x = max_x - min_x
+        span_y = max_y - min_y
+        zoom_span = max(span_x, span_y)
 
-    x_col, y_col = get_column_names_from_projection(projection)
-    dataset = Dataset.get()
+    # If zoomed in enough -> show images of nodes in viewport (or selection); otherwise hide
+    if zoom_span <= config.SCATTERPLOT_IMAGE_ZOOM_THRESHOLD:
+        visible_df = get_data_selected_on_scatterplot(selected_indices, zoom_data, projection)
 
-    images_in_zoom = []
-    for image_id, row in dataset.iterrows():
-        x, y = row[x_col], row[y_col]
-        if min_x <= x <= max_x and min_y <= y <= max_y:
-            images_in_zoom.append((x, y, image_id))
-        if len(images_in_zoom) > config.MAX_IMAGES_ON_SCATTERPLOT:
-            return scatterplot_fig
+        images = []
+        count = 0
+        for image_id, row in visible_df.iterrows():
+            if count >= config.MAX_IMAGES_ON_SCATTERPLOT:
+                break
+            x, y = row[get_column_names_from_projection(projection)[0]], row[get_column_names_from_projection(projection)[1]]
+            image_path = os.path.join(config.IMAGES_DIR, str(image_id) + '.jpg')
+            try:
+                img_src = Image.open(image_path)
+            except Exception:
+                continue
 
-    for x, y, image_id in images_in_zoom:
-        # image_path = dataset.loc[image_id]['file_path']
-        image_path = os.path.join(config.IMAGES_DIR, str(image_id) + '.jpg')
-        scatterplot_fig['layout']['images'].append(dict(
-            x=x,
-            y=y,
-            source=Image.open(image_path),
-            xref="x",
-            yref="y",
-            sizex=.05,
-            sizey=.05,
-            xanchor="center",
-            yanchor="middle",
-        ))
-    return scatterplot_fig
+            images.append(dict(
+                x=x,
+                y=y,
+                source=img_src,
+                xref="x",
+                yref="y",
+                sizex=.05,
+                sizey=.05,
+                xanchor="center",
+                yanchor="middle",
+            ))
+
+            if image_id not in images_store:
+                images_store.append(image_id)
+
+            count += 1
+
+        return images, images_store
+    else:
+        return [], []
 
 def create_scatterplot_figure(projection, dataset, sources_of_dataset, sources):
     x_col, y_col = get_column_names_from_projection(projection)
@@ -190,9 +198,10 @@ def create_scatterplot(projection):
     dataset = Dataset.get()
     sources_of_dataset = get_source_from_primary_image(dataset)
     sources = sources_of_dataset.unique()
-
     return html.Div([
         dcc.Store(id="canvas-selected-indices-store", data=[]),
+        dcc.Store(id="scatterplot-images-store", data=[]),
+        dcc.Store(id="scatterplot-zoom-threshold-store", data={"active": False, "relayoutData": None}),
         html.Div([
             #dbc.Label("Sources", html_for="source-visibility-checklist", className="form-label"),
             dbc.Checklist(
