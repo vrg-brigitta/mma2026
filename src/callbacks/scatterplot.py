@@ -1,7 +1,12 @@
+import time
+
 from dash import Patch, callback, Output, Input, State, dash, clientside_callback
 from src import config
 
 from src.widgets import scatterplot
+
+_SCATTERPLOT_ZOOM_DEBOUNCE_LAST_RUN = 0.0
+_SCATTERPLOT_ZOOM_DEBOUNCE_SECONDS = 0.15
 
 clientside_callback(
     f"""
@@ -87,8 +92,15 @@ clientside_callback(
     prevent_initial_call=True,
 )
 def scatterplot_is_zoomed(threshold_state, selected_indices, images_store):
+    global _SCATTERPLOT_ZOOM_DEBOUNCE_LAST_RUN
+
     if not threshold_state or 'zoomSpan' not in threshold_state:
         return dash.no_update, dash.no_update
+
+    now = time.time()
+    if now - _SCATTERPLOT_ZOOM_DEBOUNCE_LAST_RUN < _SCATTERPLOT_ZOOM_DEBOUNCE_SECONDS:
+        return dash.no_update, dash.no_update
+    _SCATTERPLOT_ZOOM_DEBOUNCE_LAST_RUN = now
 
     zoom_data = threshold_state.get('relayoutData', {})
     zoom_span = threshold_state.get('zoomSpan')
