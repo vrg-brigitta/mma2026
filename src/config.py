@@ -15,6 +15,10 @@ WORDCLOUD_IMAGE_WIDTH = 800
 SCATTERPLOT_COLOR = 'rgba(31, 119, 180, 0.5)'
 SCATTERPLOT_SELECTED_COLOR = 'rgba(255, 0, 0, 0.5)'
 
+# When the viewport span (max of x/y range) is <= this value, images are shown
+# Larger spans are considered 'zoomed out' and images are hidden.
+SCATTERPLOT_IMAGE_ZOOM_THRESHOLD = 5.0
+
 MAX_IMAGES_ON_SCATTERPLOT = 100
 MAX_EXPLORE_RESULTS_IMAGES_PER_PAGE = 10
 
