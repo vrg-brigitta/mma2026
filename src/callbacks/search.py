@@ -20,13 +20,13 @@ def remove_ids_outside_viewport(ids, scores, selected_indices, relayout_data):
     """
     if not selected_indices and not relayout_data:
         return ids
-    
+
     data_selected = get_data_selected_on_scatterplot(selected_indices, relayout_data)
     allowed_ids = set(data_selected.index)
-    
+
     filtered_results = [
-        (img_id, score) 
-        for img_id, score in zip(ids, scores) 
+        (img_id, score)
+        for img_id, score in zip(ids, scores)
         if img_id in allowed_ids
     ]
 
@@ -99,8 +99,8 @@ def run_initial_search(user_query, store_data, selected_indices, relayout_data):
 
     if query is None:
         return (
-            html.Div("Could not understand the query.", className="text-danger"),
-            html.P("Could not understand the query."),
+            [],
+            html.Span("Could not understand the query.", className="text-danger"),
             submit_btn_disabled, submit_btn_label, empty_state, hide_btn, True, "Load more results"
         )
 
@@ -108,15 +108,15 @@ def run_initial_search(user_query, store_data, selected_indices, relayout_data):
 
     if not ids:
         return (
-            html.Div("No results found.", className="text-warning"),
-            html.P("No results found."),
+            [],
+            html.Span("No results found.", className="text-danger"),
             submit_btn_disabled, submit_btn_label, empty_state, hide_btn, True, "Load more results"
         )
 
     filtered_results, num_selected = remove_ids_outside_viewport(ids, scores, selected_indices, relayout_data)
     top_pairs = filtered_results[:config.MAX_EXPLORE_RESULTS_IMAGES_PER_PAGE]
     top_ids = [img_id for img_id, score in top_pairs]
-    # top_scores = [score for img_id, score in top_pairs] 
+    # top_scores = [score for img_id, score in top_pairs]
 
     images = [
         html.Div(
@@ -228,7 +228,7 @@ def load_more_results(current_images, current_state, trigger_data):
 
     total_results = len(all_ids)
     num_selected = current_state["num_selected"]
-    
+
     if total_results < config.MAX_EXPLORE_RESULTS_IMAGES_PER_PAGE:
         summary = html.P(f"Found {total_results} related images out of {num_selected} selected images with {int(max(all_scores) * 100)}% confidence.")
     else:
@@ -263,7 +263,7 @@ def toggle_image_lightbox(thumb_clicks, is_open, previous_clicks):
         raise PreventUpdate
 
     previous_clicks = previous_clicks or {}
-    
+
     artwork_id = str(ctx.triggered_id.get("index"))
     current_val = ctx.triggered[0].get("value") or 0
 
@@ -294,7 +294,7 @@ def toggle_image_lightbox(thumb_clicks, is_open, previous_clicks):
         "reference_country": "Reference Country",
         "reference_region": "Reference Region",
     }
-    
+
     row = df.loc[int(artwork_id)]
     for col, label in labels.items():
         val = row[col]
@@ -323,7 +323,7 @@ def zoom_to_artwork(n_clicks, artwork_id):
 
     x_col, y_col = get_column_names_from_projection(config.DEFAULT_PROJECTION)
     df = Dataset.get()
-    
+
     try:
         target_point = df.loc[artwork_id]
         target_x = target_point[x_col]
@@ -354,7 +354,7 @@ clientside_callback(
 
         // Use setTimeout to allow React a split second to paint the new image elements into the real DOM
         setTimeout(function() {
-            const container = document.querySelector('.explore-results-inner-container > div > div:first-child');
+            const container = document.querySelector('.explore-results-container > div > div:first-child');
             if (container) {
                 container.scrollTo({
                     top: container.scrollHeight,
