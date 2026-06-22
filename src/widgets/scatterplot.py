@@ -127,8 +127,8 @@ def add_images_to_scatterplot(zoom_data=None, zoom_span=None, selected_indices=N
                 source=img_src,
                 xref="x",
                 yref="y",
-                sizex=.05,
-                sizey=.05,
+                sizex=0.00005,
+                sizey=0.00005,
                 xanchor="center",
                 yanchor="middle",
             ))

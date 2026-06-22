@@ -21,7 +21,6 @@
 }
 
 .explore-results-container > div:first-of-type {
-    height: 100%;
     overflow: hidden;
 }
 

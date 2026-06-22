@@ -1,5 +1,6 @@
 from dash import Input, Output, State, callback, html
 from dash.exceptions import PreventUpdate
+from src import config
 
 from src.llm_handlers.query_handler import query_handler
 from src.widgets.scatterplot import get_data_selected_on_scatterplot
@@ -54,11 +55,10 @@ def run_describe(trigger_data, selected_indices, relayout_data):
         )
 
     total_points = len(data_selected)
-    max_points = 200
 
-    if total_points > max_points:
-        data_selected = data_selected.sample(max_points, random_state=42)
-        print(f"Viewport exceeds threshold ({total_points}). Sampled down to {max_points} points.")
+    if total_points > config.DESCRIBE_MAX_POINTS:
+        data_selected = data_selected.sample(config.DESCRIBE_MAX_POINTS, random_state=42)
+        print(f"Viewport exceeds threshold ({total_points}). Sampled down to {config.DESCRIBE_MAX_POINTS} points.")
 
     columns = [c for c in query_handler.METADATA_FIELDS if c in data_selected.columns]
     metadata_records = data_selected[columns].to_dict("records")
@@ -80,7 +80,7 @@ def run_describe(trigger_data, selected_indices, relayout_data):
                 html.P(result.get("summary", "")),
                 html.Ul([html.Li(t) for t in result.get("trends", [])]),
             ]),
-            html.P(f" Described {min(total_points, max_points)} out of {total_points} images. Numbers behind words refer to the amount of results related to that topic.")
+            html.P(f" Described {min(total_points, config.DESCRIBE_MAX_POINTS)} out of {total_points} images. Numbers behind words refer to the amount of results related to that topic.")
         ], className="describe-results-summary"),
         grid_children,
         load_more_style,

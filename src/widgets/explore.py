@@ -47,7 +47,7 @@ def create_explore_tab_widget():
             # =============================================
             dbc.Stack([
                 html.H5("Describe"),
-                html.P("Describe the selected or visible data on the canvas. At most 200 (random) images will be described."),
+                html.P("Describe the selected or visible data on the canvas. At most 500 (random) images will be described."),
                 dbc.Stack([
                     html.Button(
                         "Describe data",

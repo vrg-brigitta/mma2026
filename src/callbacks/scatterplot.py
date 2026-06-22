@@ -6,7 +6,7 @@ from src import config
 from src.widgets import scatterplot
 
 _SCATTERPLOT_ZOOM_DEBOUNCE_LAST_RUN = 0.0
-_SCATTERPLOT_ZOOM_DEBOUNCE_SECONDS = 0.15
+_SCATTERPLOT_ZOOM_DEBOUNCE_SECONDS = 0.001
 
 clientside_callback(
     f"""
