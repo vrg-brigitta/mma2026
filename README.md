@@ -36,7 +36,7 @@ pip install -r requirements.txt
 
 ### Access compute node
 ```
-srun --partition=gpu_mig --gpus=1 --ntasks=1 --cpus-per-task=1 --time=00:20:00 --pty bash -i (other parameters are possible see instructions on Snellius below)
+srun --partition=gpu_mig --gpus=1 --ntasks=1 --cpus-per-task=1 --time=00:20:00 --pty bash -i # (other parameters are possible see instructions on Snellius below)
 ```
 
 ### Run server on Snellius
