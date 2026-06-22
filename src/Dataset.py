@@ -1,6 +1,5 @@
 import sqlite3
 import os
-import time
 
 import pandas
 
@@ -74,13 +73,7 @@ class Dataset:
         print('Dataset loaded with', len(Dataset.data), 'rows')
 
         Dataset.count = Dataset.data['genre'].value_counts()
-
-        # db = DataBase()
-        # artworks_columns = ('id', 'title', 'description', 'culture', 'period', 'dynasty', 'reign', 'type', 'genre', 'style', 'object_date', 'object_begin_date', 'object_end_date', 'location', 'medium', 'dataset_id', 'object_info_id', 'image_info_id',  'reference_date', 'reference_country', 'reference_region', 'preprocessed_description')
-        # attributes = pandas.DataFrame(db.get_all('Artworks'), columns=artworks_columns)
-        Dataset.attr_data = Dataset.data # data already contains all the attributes from Artworks table
-
-        # TODO: append artist info (as attributes) too
+        Dataset.attr_data = Dataset.data
 
     @staticmethod
     def get():
@@ -112,8 +105,6 @@ class Dataset:
 
         art_dataset_loader.load(images_to_load)
         feature_engineering.generate_projection_data(df)
-
-        #art_dataset_loader.cleanup()
 
     @staticmethod
     def get_image_url(artwork_id):

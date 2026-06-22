@@ -23,11 +23,9 @@ def get_column_names_from_projection(projection):
 def get_source_from_primary_image(df):
     return df["primary_image"].str.extract(r'^([^_]+)')[0]
 
-
 def get_source_colors(dataset):
     sources = get_source_from_primary_image(dataset).unique()
     return dict(zip(sources, trace_colors))
-
 
 def build_source_marker_properties(dataset, visible_sources=None):
     source_series = get_source_from_primary_image(dataset)
@@ -39,43 +37,6 @@ def build_source_marker_properties(dataset, visible_sources=None):
 
     opacities = [1.0 if source in visible_sources else 0.0 for source in source_series]
     return colors, opacities
-
-
-def apply_source_visibility(scatterplot_fig, visible_sources):
-    dataset = Dataset.get()
-    colors, opacities = build_source_marker_properties(dataset, visible_sources)
-
-    marker = scatterplot_fig['data'][0].get('marker', {})
-    #marker['color'] = colors
-    marker['opacity'] = opacities
-    scatterplot_fig['data'][0]['marker'] = marker
-
-    return scatterplot_fig
-
-
-def highlight_class_on_scatterplot(scatterplot, selected_genres=None):
-    dataset = Dataset.get()
-    source_colors = get_source_colors(dataset)
-    source_series = get_source_from_primary_image(dataset)
-    default_colors = source_series.map(source_colors)
-
-    scatterplot_fig_data = scatterplot['data'][0]
-    selected_ids = []
-    if 'selectedpoints' in scatterplot_fig_data:
-        selected_ids = [dataset.index[i] for i in scatterplot_fig_data['selectedpoints']]
-
-    colors = [
-        config.SCATTERPLOT_SELECTED_COLOR if image_id in selected_ids else default_colors.loc[image_id]
-        for image_id in dataset.index
-    ]
-
-    marker = scatterplot_fig_data.get('marker', {})
-    current_opacity = marker.get('opacity', [1.0] * len(dataset))
-    marker['color'] = colors
-    marker['opacity'] = current_opacity
-    scatterplot['data'][0]['marker'] = marker
-
-    return scatterplot
 
 
 def add_images_to_scatterplot(zoom_data=None, zoom_span=None, selected_indices=None, images_store=None, xaxis_range=None, yaxis_range=None, projection=config.DEFAULT_PROJECTION):
@@ -203,7 +164,6 @@ def create_scatterplot(projection):
         dcc.Store(id="scatterplot-images-store", data=[]),
         dcc.Store(id="scatterplot-zoom-threshold-store", data={"active": False, "relayoutData": None}),
         html.Div([
-            #dbc.Label("Sources", html_for="source-visibility-checklist", className="form-label"),
             dbc.Checklist(
                 id="source-visibility-checklist",
                 options=[{"label": get_source_label(source), "value": source} for source in sources],

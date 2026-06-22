@@ -184,38 +184,39 @@ class QueryHandler:
 
     def _describe_system_prompt(self):
         return (
-        """<task>
-        Describe one cluster of artworks. Start with a general description of the artworks then summarize the key insights for each of the following: culture, period, type, genre; one bullet point each.
+            """<task>
+            Describe one cluster of artworks. Start with a general description of the artworks then summarize the key insights for each of the following: culture, period, type, genre; one bullet point each.
 
-        <fields>
-        culture: origin/people (e.g. Japanese, Egyptian)
-        period: era/dynasty (e.g. Edo period, Renaissance)
-        type: object type (e.g. painting, woodblock print)
-        genre: subject/theme (e.g. landscape, portrait)
-        description: standard textual description
-        </fields>
+            <fields>
+            culture: origin/people (e.g. Japanese, Egyptian)
+            period: era/dynasty (e.g. Edo period, Renaissance)
+            type: object type (e.g. painting, woodblock print)
+            genre: subject/theme (e.g. landscape, portrait)
+            description: standard textual description
+            </fields>
 
-        <rules>
-        - Each value has a count = how many artworks have it. Higher count = more dominant, for example: "culture: Chinese, 100" means 100 artworks are Chinese.
-        - A field can have 1, 2, or more distinct values. Rank ALL given values by count, not just the top two — if three or more cultures are present, mention how they rank against each other, not just the top one vs. the rest.
-        - If a field has only one distinct value, state that the cluster is uniform on that field (100% one value) rather than describing it as "dominant" over something else, since there's nothing to compare it to.
-        - Use ONLY the given data. Never invent cultures, periods, types, genres, or details.
-        - Output ONLY the JSON object. No other text.
-        - summary: A short paragraph describing the artworks
-        - trends: 4 bullet-style strings containing key insights for the culture, period, type and genre (i.e. the number of occurences, which is dominant, and any links to the descriptions)
-        - When citing counts, place the number directly next to the value it belongs to (e.g. "Japanese culture (120) outweighs Chinese (30)"), not as a separate comparison clause.
-        - Write trends as natural, flowing sentences, not just data restatements.
-        </rules>
+            <rules>
+            - Each value has a count = how many artworks have it. Higher count = more dominant, for example: "culture: Chinese, 100" means 100 artworks are Chinese.
+            - A field can have 1, 2, or more distinct values. Rank ALL given values by count, not just the top two — if three or more cultures are present, mention how they rank against each other, not just the top one vs. the rest.
+            - If a field has only one distinct value, state that the cluster is uniform on that field (100% one value) rather than describing it as "dominant" over something else, since there's nothing to compare it to.
+            - Use ONLY the given data. Never invent cultures, periods, types, genres, or details.
+            - Output ONLY the JSON object. No other text.
+            - summary: A short paragraph describing the artworks
+            - trends: 4 bullet-style strings containing key insights for the culture, period, type and genre (i.e. the number of occurences, which is dominant, and any links to the descriptions)
+            - When citing counts, place the number directly next to the value it belongs to (e.g. "Japanese culture (120) outweighs Chinese (30)"), not as a separate comparison clause.
+            - Write trends as natural, flowing sentences, not just data restatements.
+            </rules>
 
-        <output>
-        {"summary": "", "trends": []}
-        </output>
+            <output>
+            {"summary": "", "trends": []}
+            </output>
 
-        <example>
-        user: culture: German, 40; culture: French, 25; culture: Dutch, 15; culture: Russian, 5; period: 18th century, 85; type: Porcelain, 60; type: Glass, 25; genre: European Sculpture and Decorative Arts, 85; description: "A ladle, typically used for serving soups or stews"; description: "A figure in the form of a nodding pagoda"; description: "A jug"; description: "A goblet"; description: "A group of monkeys"
-        output: {"summary": "An 18th-century cluster of European decorative arts, led by German pieces but with a meaningful spread across French, Dutch, and Russian origins, made up mostly of porcelain alongside a smaller share of glass objects such as jugs and goblets.", "trends": ["German culture (40) leads the cluster, followed by French (25), Dutch (15), and a small Russian presence (5)", "Every piece in the cluster is dated to the 18th century (85), making it fully uniform on period", "Porcelain (60) is the more common object type, ahead of Glass (25), reflected in descriptions of ladles, figures, and pagodas alongside jugs and goblets", "European Sculpture and Decorative Arts (85) is the only genre present, so the cluster is uniform here too"]}
-        </example>
-        </task>""")
+            <example>
+            user: culture: German, 40; culture: French, 25; culture: Dutch, 15; culture: Russian, 5; period: 18th century, 85; type: Porcelain, 60; type: Glass, 25; genre: European Sculpture and Decorative Arts, 85; description: "A ladle, typically used for serving soups or stews"; description: "A figure in the form of a nodding pagoda"; description: "A jug"; description: "A goblet"; description: "A group of monkeys"
+            output: {"summary": "An 18th-century cluster of European decorative arts, led by German pieces but with a meaningful spread across French, Dutch, and Russian origins, made up mostly of porcelain alongside a smaller share of glass objects such as jugs and goblets.", "trends": ["German culture (40) leads the cluster, followed by French (25), Dutch (15), and a small Russian presence (5)", "Every piece in the cluster is dated to the 18th century (85), making it fully uniform on period", "Porcelain (60) is the more common object type, ahead of Glass (25), reflected in descriptions of ladles, figures, and pagodas alongside jugs and goblets", "European Sculpture and Decorative Arts (85) is the only genre present, so the cluster is uniform here too"]}
+            </example>
+            </task>"""
+        )
 
     def describe(self, metadata_records):
         """
