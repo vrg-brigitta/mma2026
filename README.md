@@ -1,4 +1,4 @@
-# LLM-Driven Exploration and Analytics for Digital Art Collections
+# LLM-Driven Exploration and Analytics of Digital Art Collections
 
 ![Demo preview](./preview.png)
 
