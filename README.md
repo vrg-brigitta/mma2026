@@ -1,6 +1,6 @@
 # LLM-Driven Exploration and Analytics for Digital Art Collections
 
-[Demo video](./demo.mp4)
+[![Demo](./preview.png)](./demo.mp4)
 
 The growing digitization of museum collections has created a need for tools that
 support the exploration, organization, and analysis of large-scale artwork
