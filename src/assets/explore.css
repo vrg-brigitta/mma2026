@@ -6,6 +6,19 @@
     overflow: hidden;
 }
 
+.follow-up-suggestions li {
+    text-decoration-line: underline;
+    text-decoration-style: dotted;
+    text-decoration-color: gray;
+    text-decoration-thickness: 2px;
+}
+
+.follow-up-suggestions li:hover {
+    color: var(--bs-primary);
+    text-decoration-color: var(--bs-primary);
+    cursor: pointer;
+}
+
 .describe-results-summary {
     max-height: 100%;
     overflow-x: hidden;
