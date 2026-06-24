@@ -137,7 +137,7 @@ class QueryHandler:
 
     def dict_to_clip_query(self, query_dict):
         """Convert the structured query dict from the LLM into a text query for CLIP.
-        
+
         Example:
             Input:
                 {
@@ -155,7 +155,7 @@ class QueryHandler:
                 Required terms:
                 Japanese
                 woodblock print
-                waves 
+                waves
         """
         search_query = query_dict.get("search_query", "")
         terms = query_dict.get("terms", {})
@@ -194,16 +194,16 @@ class QueryHandler:
             description: standard textual description
             </fields>
             <rules>
-            • Each value has a count = how many artworks have it. Higher count = more dominant, for example: "culture: Chinese, 100" means 100 artworks are Chinese.
-            • A field can have 1, 2, or more distinct values. Rank ALL given values by count, not just the top two — if three or more cultures are present, mention how they rank against each other, not just the top one vs. the rest.
-            • If a field has only one distinct value, state that the cluster is uniform on that field (100% one value) rather than describing it as "dominant" over something else, since there's nothing to compare it to.
-            • Use ONLY the given data. Never invent cultures, periods, types, genres, or details.
-            • When citing counts, place the number directly next to the value it belongs to (e.g. "Japanese culture (120) outweighs Chinese (30)"), not as a separate comparison clause.
-            • Write trends as natural, flowing sentences, not just data restatements.
-            • summary: A short paragraph describing the artworks.
-            • trends: 4 bullet-style strings containing key insights for the culture, period, type and genre (i.e. the number of occurrences, which is dominant, and any links to the descriptions).
-            • suggestions: A list of exactly 2 natural language search queries, ordered from most to least interesting, that a user could submit to explore this cluster more deeply. Each suggestion should be grounded in the dominant metadata values found in the cluster and informed by patterns or contrasts observed in the summary and trends. Frame them as something a curious user might naturally ask next, not as restatements of the cluster. Vary the angle across suggestions — for example, drilling into a subtype, contrasting a minority culture, exploring a thematic thread from the descriptions, or shifting to an adjacent period. Make sure that the questions start with either "Show me" or "Find me". Never say "compare" or "contrast" in the suggestions, since the user will be exploring one cluster at a time.
-            • Output ONLY the JSON object. No other text.
+            - Each value has a count = how many artworks have it. Higher count = more dominant, for example: "culture: Chinese, 100" means 100 artworks are Chinese.
+            - A field can have 1, 2, or more distinct values. Rank ALL given values by count, not just the top two — if three or more cultures are present, mention how they rank against each other, not just the top one vs. the rest.
+            - If a field has only one distinct value, state that the cluster is uniform on that field (100% one value) rather than describing it as "dominant" over something else, since there's nothing to compare it to.
+            - Use ONLY the given data. Never invent cultures, periods, types, genres, or details.
+            - When citing counts, place the number directly next to the value it belongs to (e.g. "Japanese culture (120) outweighs Chinese (30)"), not as a separate comparison clause.
+            - Write trends as natural, flowing sentences, not just data restatements.
+            - summary: A short paragraph describing the artworks.
+            - trends: 4 bullet-style strings containing key insights for the culture, period, type and genre (i.e. the number of occurrences, which is dominant, and any links to the descriptions).
+            - suggestions: A list of exactly 2 natural language search queries, ordered from most to least interesting, that a user could submit to explore this cluster more deeply. Each suggestion should be grounded in the dominant metadata values found in the cluster and informed by patterns or contrasts observed in the summary and trends. Frame them as something a curious user might naturally ask next, not as restatements of the cluster. Vary the angle across suggestions — for example, drilling into a subtype, contrasting a minority culture, exploring a thematic thread from the descriptions, or shifting to an adjacent period. Make sure that the questions start with either "Show me" or "Find me". Never say "compare" or "contrast" in the suggestions, since the user will be exploring one cluster at a time.
+            - Output ONLY the JSON object. No other text.
             </rules>
             <output>
             {"summary": "", "trends": [], "suggestions": []}
