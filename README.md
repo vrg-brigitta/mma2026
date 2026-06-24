@@ -8,10 +8,9 @@
 **Abstract:** The growing digitization of museum collections has created a need
 for tools that support the exploration, organization, and analysis of
 large-scale artwork datasets. We present a web-based multimedia analytics
-platform that allows natural language interaction, allowing for collection
-exploration. The application enables users to explore the dataset automatically
-through large language model (LLM)-driven workflow, lowering the barrier for
-non-technical domain experts.
+platform that allows various art collection exploration through natural language
+interactions. The application enables users to explore multiple datasets through
+natural language, thereby lowering the barrier for non-technical domain experts.
 
 
 ## Local
