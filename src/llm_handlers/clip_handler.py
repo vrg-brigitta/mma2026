@@ -66,7 +66,7 @@ class CLIPHandler:
 
         return text_features.cpu().numpy()[0]
 
-    def search_by_text(self, query, threshold=0.25):
+    def search_by_text(self, query, threshold=config.CLIP_THRESHOLD):
         if self.embeddings is None or self.ids is None:
             raise RuntimeError("Embeddings not loaded. Call load_embeddings() first.")
 

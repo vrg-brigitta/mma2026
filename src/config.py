@@ -36,7 +36,7 @@ RANDOM_SAMPLING = False # if false, the first DATASET_SAMPLE_SIZE images will be
 FILTER_NON_NULL_COLUMNS = True
 
 CLIP_MODEL = 'ViT-L/14'
-CLIP_THRESHOLD = 0.3
+CLIP_THRESHOLD = 0.25
 CLIP_EMBEDS_BATCH_SIZE = 256
 
 # path configuration
