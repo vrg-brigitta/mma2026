@@ -8,9 +8,23 @@
 **Abstract:** The growing digitization of museum collections has created a need
 for tools that support the exploration, organization, and analysis of
 large-scale artwork datasets. We present a web-based multimedia analytics
-platform that allows various art collection exploration through natural language
-interactions. The application enables users to explore multiple datasets through
-natural language, thereby lowering the barrier for non-technical domain experts.
+platform that enables interactive exploration of art collections through natural
+language, thereby lowering the barrier for non-technical domain experts. The
+system integrates a canvas-based visualization with a sidebar that supports
+LLM-assisted search and analysis through natural language, as well as a describe
+function that generates contextual summaries for selected or visible subsets of
+the data. To support these objectives, our work makes three contributions.
+First, we introduce an integrated interface for interactive exploration and
+filtering of processed data (exploration), enabling inspection, querying, and
+refinement of large-scale image collections through combined search, filtering,
+and visual selection. Second, we propose an LLM-enhanced querying and
+description component for art collections (organization), which improves
+retrieval via natural-language query refinement and generates cluster-level
+summaries that expose patterns and trends in metadata-driven image groups.
+Third, we present a unified end-to-end framework that integrates image
+processing pipelines with interactive analysis and visualization in a single
+system (analysis), bridging the gap between preprocessing and exploration
+workflows.
 
 
 ## Local
