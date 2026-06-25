@@ -16,8 +16,8 @@ def get_column_names_from_projection(projection):
     elif projection == 'UMAP':
         x_col, y_col = 'umap_x', 'umap_y'
     else:
-        raise Exception('Projection not found')    
- 
+        raise Exception('Projection not found')
+
     return x_col, y_col
 
 def get_source_from_primary_image(df):
@@ -109,7 +109,50 @@ def create_scatterplot_figure(projection, dataset, sources_of_dataset, sources):
     source_series = get_source_from_primary_image(dataset)
     marker_colors, marker_opacities = build_source_marker_properties(dataset)
 
-    combined_metadata = list(zip(dataset.index.tolist(), source_series.tolist()))
+    # 1. Define the metadata fields mapping requested
+    labels = {
+        "title": "Title",
+        # "description": "Description",
+        # "preprocessed_description": "Generated Description",
+        "culture": "Culture",
+        "period": "Period",
+        "dynasty": "Dynasty",
+        "reign": "Reign",
+        "type": "Type",
+        "genre": "Genre",
+        "style": "Style",
+        "location": "Location",
+        "medium": "Medium",
+        "reference_country": "Reference Country",
+        "reference_region": "Reference Region",
+    }
+
+    hover_lines = [
+        "<b>Image ID:</b> %{customdata[0]}<br>",
+        "<b>Source:</b> %{customdata[1]}<br>"
+    ]
+
+    metadata_lists = [
+        dataset.index.tolist(),
+        source_series.tolist()
+    ]
+
+    # Append the metadata fields
+    for idx, (col_name, display_label) in enumerate(labels.items(), start=2):
+        if col_name in dataset.columns:
+            # Replace NaNs/Nulls with a placeholder so 'None' or 'NaN' doesn't look ugly on hover
+            sanitized_series = dataset[col_name].fillna("Unknown").tolist()
+            metadata_lists.append(sanitized_series)
+            hover_lines.append(f"<b>{display_label}:</b> %{{customdata[{idx}]}}<br>")
+        else:
+            # Fallback placeholder if a column is missing entirely from the dataframe schema
+            metadata_lists.append(["N/A"] * len(dataset))
+            hover_lines.append(f"<b>{display_label}:</b> %{{customdata[{idx}]}}<br>")
+
+    combined_metadata = list(zip(*metadata_lists))
+
+    hover_lines.append("<extra></extra>")
+    hovertemplate_string = "".join(hover_lines)
 
     fig = go.Figure(
         data=go.Scattergl(
@@ -117,9 +160,11 @@ def create_scatterplot_figure(projection, dataset, sources_of_dataset, sources):
             y=dataset[y_col],
             mode="markers",
             customdata=combined_metadata,
+            hovertemplate=hovertemplate_string,
             marker=dict(
                 size=7,
                 opacity=marker_opacities,
+                # color=marker_colors,
             ),
             selected_marker=dict(color=config.SCATTERPLOT_SELECTED_COLOR),
             unselected_marker=dict(opacity=0.6),
@@ -194,7 +239,7 @@ def get_data_selected_on_scatterplot(selected_indices, relayout_data, projection
     Optimized helper accepting pre-stripped integer indices from the client store.
     """
     dataset = Dataset.get()
-    x_col, y_col = get_column_names_from_projection(projection) 
+    x_col, y_col = get_column_names_from_projection(projection)
 
     if selected_indices:
         return dataset.iloc[selected_indices]
