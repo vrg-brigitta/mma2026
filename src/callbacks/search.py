@@ -250,27 +250,52 @@ def load_more_results(current_images, current_state, trigger_data):
     Output("active-modal-artwork-id", "data"),
     Output("result-img-clicks-tracker-store", "data"),
     Input({"type": "thumb-img", "index": ALL}, "n_clicks"),
+    Input("scatterplot", "clickData"),                     # <-- NEW TRIGER: Listen for scatterplot point clicks
     State("image-preview-modal", "is_open"),
     State("result-img-clicks-tracker-store", "data"),
     prevent_initial_call=True
 )
-def toggle_image_lightbox(thumb_clicks, is_open, previous_clicks):
+def toggle_image_lightbox(thumb_clicks, scatter_click, is_open, previous_clicks):
     ctx = dash.callback_context
     if not ctx.triggered or not ctx.triggered_id:
         raise PreventUpdate
 
     previous_clicks = previous_clicks or {}
+    artwork_id = None
 
-    artwork_id = str(ctx.triggered_id.get("index"))
-    current_val = ctx.triggered[0].get("value") or 0
+    # Determine what triggered the callback
+    trigger_id = ctx.triggered_id
 
-    # Return early if the click count didn't strictly increase
-    if current_val <= previous_clicks.get(artwork_id, 0):
+    # Case A: Triggered by a scatterplot marker click
+    if trigger_id == "scatterplot":
+        if not scatter_click or "points" not in scatter_click or not scatter_click["points"]:
+            raise PreventUpdate
+        
+        # Pull customdata out of the clicked point.
+        # Inside customdata, index 0 is the dataset index (artwork_id).
+        point_data = scatter_click["points"][0]
+        if "customdata" in point_data and point_data["customdata"]:
+            artwork_id = str(point_data["customdata"][0])
+        else:
+            raise PreventUpdate
+
+    # Case B: Triggered by a thumbnail grid result click
+    elif isinstance(trigger_id, dict) and trigger_id.get("type") == "thumb-img":
+        artwork_id = str(trigger_id.get("index"))
+        current_val = ctx.triggered[0].get("value") or 0
+
+        # Return early if the click count didn't strictly increase
+        if current_val <= previous_clicks.get(artwork_id, 0):
+            previous_clicks[artwork_id] = current_val
+            return dash.no_update, dash.no_update, dash.no_update, dash.no_update, previous_clicks
+
         previous_clicks[artwork_id] = current_val
-        return dash.no_update, dash.no_update, dash.no_update, dash.no_update, previous_clicks
 
-    previous_clicks[artwork_id] = current_val
+    # Fallback safety check
+    if artwork_id is None:
+        raise PreventUpdate
 
+    # Build the response payload using the identified artwork_id
     large_img_url = Dataset.get_image_url(int(artwork_id))
     df = Dataset.get()
     metadata_elements = []
@@ -292,16 +317,22 @@ def toggle_image_lightbox(thumb_clicks, is_open, previous_clicks):
         "reference_region": "Reference Region",
     }
 
-    row = df.loc[int(artwork_id)]
+    try:
+        row = df.loc[int(artwork_id)]
+    except KeyError:
+        raise PreventUpdate
+
     for col, label in labels.items():
-        val = row[col]
-        if val and str(val).strip().lower() != 'nan':
-            metadata_elements.append(html.Div([
-                html.Strong(f"{label}: ", className="text-secondary"),
-                html.Span(str(val), className="text-dark ml-1")
-            ], className="mb-2 p-2 bg-light rounded border-sm"))
+        if col in df.columns:
+            val = row[col]
+            if val and str(val).strip().lower() != 'nan':
+                metadata_elements.append(html.Div([
+                    html.Strong(f"{label}: ", className="text-secondary"),
+                    html.Span(str(val), className="text-dark ml-1")
+                ], className="mb-2 p-2 bg-light rounded border-sm"))
 
     return True, large_img_url, metadata_elements, int(artwork_id), previous_clicks
+
 
 # =========================================================================
 # Go to data point on canvas when "Show on Canvas" is clicked in the modal

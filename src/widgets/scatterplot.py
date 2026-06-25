@@ -140,9 +140,16 @@ def create_scatterplot_figure(projection, dataset, sources_of_dataset, sources):
     # Append the metadata fields
     for idx, (col_name, display_label) in enumerate(labels.items(), start=2):
         if col_name in dataset.columns:
-            # Replace NaNs/Nulls with a placeholder so 'None' or 'NaN' doesn't look ugly on hover
-            sanitized_series = dataset[col_name].fillna("Unknown").tolist()
-            metadata_lists.append(sanitized_series)
+            sanitized_series = dataset[col_name].fillna("Unknown").astype(str).tolist()
+            
+            # Truncate each string value to 30 characters maximum
+            max_chars = 30
+            truncated_series = [
+                f"{val[:max_chars-3]}..." if len(val) > max_chars else val 
+                for val in sanitized_series
+            ]
+            
+            metadata_lists.append(truncated_series)
             hover_lines.append(f"<b>{display_label}:</b> %{{customdata[{idx}]}}<br>")
         else:
             # Fallback placeholder if a column is missing entirely from the dataframe schema
