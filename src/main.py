@@ -36,7 +36,7 @@ def run_ui():
         ], justify='between', className='main-row'),
     ], fluid=True, id='container', className='app-container')
 
-    app.run(debug=False, use_reloader=False, dev_tools_hot_reload=False)
+    app.run(debug=True, use_reloader=False, dev_tools_hot_reload=False)
 
 
 def main():

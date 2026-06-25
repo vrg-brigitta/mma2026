@@ -6,7 +6,7 @@ from src import config
 from src.widgets import scatterplot
 
 _SCATTERPLOT_ZOOM_DEBOUNCE_LAST_RUN = 0.0
-_SCATTERPLOT_ZOOM_DEBOUNCE_SECONDS = 0.001
+_SCATTERPLOT_ZOOM_DEBOUNCE_SECONDS = 0.5
 
 clientside_callback(
     f"""
@@ -127,6 +127,7 @@ def scatterplot_is_zoomed(threshold_state, selected_indices, images_store):
 
     return patched_fig, images_store
 
+
 clientside_callback(
     """
     function(selectedData) {
@@ -134,7 +135,7 @@ clientside_callback(
         if (!selectedData || !selectedData.points || selectedData.points.length === 0) {
             return [];
         }
-        
+
         //extract ONLY the integer index and drop the rest
         return selectedData.points.map(p => p.pointIndex);
     }
@@ -172,6 +173,77 @@ clientside_callback(
     """,
     Output("scatterplot", "figure"),
     Input("source-visibility-checklist", "value"),
+    State("scatterplot", "figure"),
+    prevent_initial_call=True
+)
+
+
+clientside_callback(
+    """
+    function(searchState, figure) {
+        if (!figure || !figure.data || figure.data.length === 0) {
+            return [window.dash_clientside.no_update, window.dash_clientside.no_update];
+        }
+
+        if (!window._lastProcessedSearchKey) {
+            window._lastProcessedSearchKey = null;
+        }
+
+        const currentSearchKey = searchState && searchState.all_ids ? JSON.stringify(searchState.all_ids) : null;
+
+        // CRITICAL GUARD: Only execute if this is a brand new, unseen search result payload
+        if (!currentSearchKey || currentSearchKey === window._lastProcessedSearchKey) {
+            return [window.dash_clientside.no_update, window.dash_clientside.no_update];
+        }
+
+        window._lastProcessedSearchKey = currentSearchKey;
+
+        const customData = figure.data[0].customdata || [];
+        if (customData.length === 0) {
+            return [window.dash_clientside.no_update, window.dash_clientside.no_update];
+        }
+
+        const searchIds = new Set(searchState.all_ids.map(String));
+
+        const DEFAULT_GRAY = 'rgba(200, 200, 200, 0.5)';
+        const SELECTION_RED = 'rgba(255, 0, 0, 0.5)';
+        const SEARCH_GREEN = '#27AE60'; // Muted medium emerald green
+
+        const colors = [];
+        for (let i = 0; i < customData.length; i++) {
+            const pair = customData[i];
+            if (pair && searchIds.has(String(pair[0]))) {
+                colors.push(SEARCH_GREEN);
+            } else {
+                colors.push(DEFAULT_GRAY);
+            }
+        }
+
+        const newFigure = Object.assign({}, figure);
+        newFigure.data = figure.data.slice();
+        const trace = Object.assign({}, newFigure.data[0]);
+
+        // Drop the selection overlay
+        if ('selectedpoints' in trace) {
+            delete trace.selectedpoints;
+        }
+
+        trace.marker = Object.assign({}, trace.marker || {});
+        trace.marker.color = colors;
+
+        // Maintain selection tool configuration rules intact for any future lasso/box drawing
+        trace.selected = Object.assign({}, trace.selected || {});
+        trace.selected.marker = Object.assign({}, trace.selected.marker || {});
+        trace.selected.marker.color = SELECTION_RED;
+
+        newFigure.data[0] = trace;
+
+        return [newFigure, null];
+    }
+    """,
+    Output("scatterplot", "figure", allow_duplicate=True),
+    Output("scatterplot", "selectedData", allow_duplicate=True),
+    Input("search-state-store", "data"),
     State("scatterplot", "figure"),
     prevent_initial_call=True
 )
