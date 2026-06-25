@@ -13,19 +13,17 @@ language, thereby lowering the barrier for non-technical domain experts. The
 system integrates a canvas-based visualization with a sidebar that supports
 LLM-assisted search and analysis through natural language, as well as a describe
 function that generates contextual summaries for selected or visible subsets of
-the data. To support these objectives, our work makes three contributions.
-First, we introduce an integrated interface for interactive exploration and
-filtering of processed data (exploration), enabling inspection, querying, and
-refinement of large-scale image collections through combined search, filtering,
-and visual selection. Second, we propose an LLM-enhanced querying and
-description component for art collections (organization), which improves
-retrieval via natural-language query refinement and generates cluster-level
-summaries that expose patterns and trends in metadata-driven image groups.
-Third, we present a unified end-to-end framework that integrates image
-processing pipelines with interactive analysis and visualization in a single
-system (analysis), bridging the gap between preprocessing and exploration
-workflows.
-
+the data. To this end, our work makes three contributions. First, we introduce
+an integrated interface for interactive exploration and filtering of processed
+data (exploration), enabling inspection, querying, and refinement of large-scale
+image collections through combined search, filtering, and visual selection.
+Second, we propose an LLM-enhanced querying and description component for art
+collections (organization), which improves retrieval via natural-language query
+refinement and generates cluster-level summaries that expose patterns and trends
+in metadata-driven image groups. Third, we establish a closed visual–language
+loop for iterative thematic discovery (analysis), which reinforces exploration
+across successive queries by pairing canvas-generated descriptions with
+interactive follow-up suggestions that progressively narrow the search space.
 
 ## Local
 ### Setup
